@@ -60,7 +60,7 @@ When possible, include:
 
 ## Public sharing
 
-This repository is public, so anyone can browse and reuse the code subject to the license and any third-party assets or dependencies used by each project. Do not upload passwords, API keys, private information, or assets you don't have permission to share.
+This repository is public, so anyone can browse the code. Reuse is subject to the license and any third-party assets or dependencies used by each project. Do not upload passwords, API keys, private information, or assets you don't have permission to share.
 
 ## License
 
