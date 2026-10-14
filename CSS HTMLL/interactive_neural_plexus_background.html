@@ -1,0 +1,1221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MORPHOGENESIS // Interactive Neural Plexus Background</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-studio: #d5d5d5;
+            --ink-dark: #141414;
+        }
+
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-studio);
+            color: var(--ink-dark);
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+            scroll-behavior: smooth;
+        }
+
+        /* Custom subtle scrollbar */
+        ::-webkit-scrollbar {
+            width: 5px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #cfcfcf;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #222;
+            border-radius: 9999px;
+        }
+
+        .font-display {
+            font-family: 'Space Grotesk', sans-serif;
+        }
+        .font-mono-tech {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* Fixed Interactive Background Canvas Container */
+        #bg-viewport {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 1;
+            pointer-events: none;
+            overflow: hidden;
+            background: radial-gradient(circle at 52% 48%, #e4e4e4 0%, #d3d3d3 58%, #c2c2c2 100%);
+        }
+
+        #interactive-canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        /* Scrollable Editorial Content Layer */
+        #scroll-content {
+            position: relative;
+            z-index: 10;
+            pointer-events: none;
+            transition: opacity 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .interactive-ui {
+            pointer-events: auto;
+        }
+
+        /* Frosted Studio Glass Cards */
+        .studio-glass {
+            background: rgba(242, 242, 242, 0.68);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(20, 20, 20, 0.11);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.7);
+        }
+
+        .studio-glass-dark {
+            background: rgba(18, 18, 18, 0.86);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.22);
+            color: #f5f5f5;
+        }
+
+        /* Custom Range Input Styling */
+        input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 999px;
+            outline: none;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: #ffffff;
+            cursor: pointer;
+            border: 2px solid #111;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+            transition: transform 0.15s ease;
+        }
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+        }
+
+        /* Custom Cursor Ring */
+        #cursor-probe {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 36px;
+            height: 36px;
+            border: 1px solid rgba(20, 20, 20, 0.35);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 40;
+            transition: width 0.2s ease, height 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        #cursor-probe::after {
+            content: '';
+            width: 4px;
+            height: 4px;
+            background: #141414;
+            border-radius: 50%;
+        }
+        #cursor-probe.active-atom {
+            width: 64px;
+            height: 64px;
+            border-color: rgba(15, 15, 15, 0.75);
+            background-color: rgba(255, 255, 255, 0.08);
+        }
+
+        @keyframes pulseSlow {
+            0%, 100% { opacity: 0.4; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.15); }
+        }
+        .pulse-dot {
+            animation: pulseSlow 2.4s infinite ease-in-out;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Custom Magnetic Cursor Probe -->
+    <div id="cursor-probe" class="hidden md:flex"></div>
+
+    <!-- Fixed Interactive Hybrid WebGL/2D Mesh & Atomic Plexus Background -->
+    <div id="bg-viewport">
+        <canvas id="interactive-canvas"></canvas>
+    </div>
+
+    <!-- Fixed Top Navigation / Telemetry Header -->
+    <header class="fixed top-0 left-0 w-full z-30 px-5 py-4 md:px-10 md:py-6 flex items-center justify-between pointer-events-none">
+        <div class="flex items-center gap-3 interactive-ui">
+            <div class="w-8 h-8 rounded-full bg-neutral-900 text-white flex items-center justify-center font-mono-tech text-xs font-semibold tracking-tighter shadow-md">
+                M//09
+            </div>
+            <div>
+                <div class="font-display font-semibold text-sm tracking-tight text-neutral-900 flex items-center gap-2">
+                    <span>PLEXUS.ATOMICA</span>
+                    <span class="inline-block w-1.5 h-1.5 rounded-full bg-neutral-900 pulse-dot"></span>
+                </div>
+                <div class="font-mono-tech text-[10px] text-neutral-600 tracking-widest uppercase">
+                    MESH_ID: IMG_9097D7 // LIVE PHYSICS
+                </div>
+            </div>
+        </div>
+
+        <!-- Live Telemetry Readout Pill -->
+        <div class="hidden lg:flex items-center gap-6 studio-glass px-4 py-2 rounded-full font-mono-tech text-[11px] text-neutral-800 interactive-ui">
+            <div class="flex items-center gap-2">
+                <span class="text-neutral-500">ZOOM_DOLLY:</span>
+                <span id="hud-zoom" class="font-semibold text-neutral-950">1.00x</span>
+            </div>
+            <div class="h-3 w-[1px] bg-neutral-400/40"></div>
+            <div class="flex items-center gap-2">
+                <span class="text-neutral-500">ACTIVE_NODES:</span>
+                <span id="hud-nodes" class="font-semibold text-neutral-950">0 / 265</span>
+            </div>
+            <div class="h-3 w-[1px] bg-neutral-400/40"></div>
+            <div class="flex items-center gap-2">
+                <span class="text-neutral-500">KINETIC_ENERGY:</span>
+                <span id="hud-energy" class="font-semibold text-neutral-950">0.00 J</span>
+            </div>
+        </div>
+
+        <!-- Right Quick Action Buttons -->
+        <div class="flex items-center gap-2.5 interactive-ui">
+            <button id="btn-pulse-wave" class="studio-glass hover:bg-white/90 text-neutral-900 px-3.5 py-2 rounded-full font-mono-tech text-xs font-medium transition flex items-center gap-1.5 shadow-sm active:scale-95" title="Trigger atomic shockwave across the model">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                </svg>
+                <span>Shockwave</span>
+            </button>
+
+            <button id="btn-toggle-ui" class="studio-glass-dark hover:bg-neutral-800 text-white px-4 py-2 rounded-full font-mono-tech text-xs font-medium transition flex items-center gap-2 shadow-md active:scale-95">
+                <span id="toggle-ui-label">Pure Canvas: OFF</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Fixed Right Scroll Progress & Depth Ruler -->
+    <div class="fixed right-5 md:right-8 top-1/2 -translate-y-1/2 z-30 hidden sm:flex flex-col items-center gap-3 pointer-events-none">
+        <span class="font-mono-tech text-[10px] text-neutral-700 tracking-widest rotate-90 mb-3">00%</span>
+        <div class="w-1 h-44 bg-neutral-400/40 rounded-full overflow-hidden relative">
+            <div id="scroll-progress-bar" class="w-full bg-neutral-900 rounded-full transition-all duration-75" style="height: 0%;"></div>
+        </div>
+        <span id="scroll-pct-text" class="font-mono-tech text-[10px] font-semibold text-neutral-900 tracking-widest mt-2">0%</span>
+    </div>
+
+    <!-- Floating Bottom-Left Physics & Camera Control Dock -->
+    <aside class="fixed bottom-5 left-5 md:bottom-8 md:left-10 z-30 interactive-ui">
+        <div id="controls-panel" class="studio-glass-dark rounded-2xl p-4 w-72 sm:w-80 transition-all duration-300">
+            <div class="flex items-center justify-between mb-3 pb-2 border-b border-white/10">
+                <div class="flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                    <span class="font-mono-tech text-[11px] uppercase tracking-wider text-neutral-200 font-medium">Atom & Node Physics</span>
+                </div>
+                <button id="btn-collapse-controls" class="text-neutral-400 hover:text-white text-xs font-mono-tech px-1.5 py-0.5 rounded bg-white/5">
+                    [–]
+                </button>
+            </div>
+
+            <div id="controls-body" class="space-y-3.5 text-xs">
+                <div>
+                    <div class="flex justify-between font-mono-tech text-[11px] mb-1">
+                        <span class="text-neutral-300">Hover Force Radius</span>
+                        <span id="val-radius" class="text-white">165px</span>
+                    </div>
+                    <input id="slider-radius" type="range" min="70" max="320" value="165">
+                </div>
+
+                <div>
+                    <div class="flex justify-between font-mono-tech text-[11px] mb-1">
+                        <span class="text-neutral-300">Atom & Mesh Elasticity</span>
+                        <span id="val-strength" class="text-white">1.35x</span>
+                    </div>
+                    <input id="slider-strength" type="range" min="20" max="260" value="135">
+                </div>
+
+                <div>
+                    <div class="flex justify-between font-mono-tech text-[11px] mb-1">
+                        <span class="text-neutral-300">Scroll Zoom Intensity</span>
+                        <span id="val-zoom" class="text-white">2.85x</span>
+                    </div>
+                    <input id="slider-zoom" type="range" min="140" max="400" value="285">
+                </div>
+
+                <div class="pt-1 flex items-center justify-between gap-2">
+                    <button id="btn-mode-repel" class="flex-1 py-1.5 px-2.5 rounded-lg font-mono-tech text-[11px] bg-white text-neutral-900 font-semibold transition">
+                        Mode: Repel + Orbit
+                    </button>
+                    <button id="btn-wireframe" class="py-1.5 px-2.5 rounded-lg font-mono-tech text-[11px] bg-white/10 hover:bg-white/20 text-neutral-200 transition" title="Highlight dynamic triangulation mesh">
+                        Plexus: ON
+                    </button>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Scrollable Narrative & Focal Camera Waypoints (460vh total height) -->
+    <main id="scroll-content" class="w-full">
+
+        <!-- SECTION 1: Full Architectural View (0% - 25% Scroll) -->
+        <section class="min-h-screen w-full flex flex-col justify-between px-5 sm:px-10 md:px-16 pt-28 pb-24">
+            <div class="max-w-lg studio-glass rounded-3xl p-6 sm:p-8 interactive-ui mt-4 md:mt-10">
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-neutral-900/5 border border-neutral-900/10 font-mono-tech text-[11px] text-neutral-700 mb-4">
+                    <span>STAGE 01 // FULL SCULPTURAL FIELD</span>
+                </div>
+                <h1 class="font-display text-3xl sm:text-5xl font-bold tracking-tight text-neutral-900 leading-[1.08] mb-4">
+                    Atomic Dissolution of Form.
+                </h1>
+                <p class="text-neutral-700 text-sm sm:text-base leading-relaxed mb-6">
+                    Move your cursor directly across the sculptural head, hand, and disintegrating crown. Both the underlying cellular spheres of the artwork and the 3D-shaded atomic plexus nodes physically warp, stretch, and orbit around your pointer.
+                </p>
+                <div class="flex flex-wrap items-center gap-3 text-xs font-mono-tech text-neutral-600">
+                    <span class="px-3 py-1.5 rounded-lg bg-white/60 border border-black/5">SCROLL: Dolly Camera Closer</span>
+                    <span class="px-3 py-1.5 rounded-lg bg-white/60 border border-black/5">HOVER: Displace Atoms & Nodes</span>
+                </div>
+            </div>
+
+            <div class="self-end hidden md:flex items-center gap-3 studio-glass px-5 py-3 rounded-2xl interactive-ui">
+                <div class="text-right font-mono-tech">
+                    <div class="text-[10px] text-neutral-500 uppercase">SCROLL DOWN TO APPROACH MODEL</div>
+                    <div class="text-xs font-semibold text-neutral-900">Focal Target: Crown & Lattice Network ↓</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 2: Upper Crown & Geometric Lattice Disintegration (25% - 55% Scroll) -->
+        <section class="min-h-screen w-full flex items-center justify-end px-5 sm:px-10 md:px-20 py-24">
+            <div class="max-w-md studio-glass rounded-3xl p-6 sm:p-8 interactive-ui">
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-neutral-900 text-white font-mono-tech text-[11px] mb-4">
+                    <span>STAGE 02 // CRANIAL LATTICE</span>
+                </div>
+                <h2 class="font-display text-2xl sm:text-4xl font-bold tracking-tight text-neutral-900 leading-tight mb-3">
+                    Synaptic Tension & Vector Threads.
+                </h2>
+                <p class="text-neutral-700 text-sm sm:text-base leading-relaxed mb-5">
+                    As the camera dollies inward, observe the upper cranial disintegration zone. White and obsidian nodes are tethered by high-tensile geometric filaments that dynamically recalculate tension as your cursor disturbs the field.
+                </p>
+                <div class="grid grid-cols-2 gap-3 pt-2 border-t border-neutral-900/10 font-mono-tech text-xs">
+                    <div>
+                        <span class="text-neutral-500 block text-[10px]">WHITE NODES</span>
+                        <span class="font-semibold text-neutral-900"> Anchor Vertices</span>
+                    </div>
+                    <div>
+                        <span class="text-neutral-500 block text-[10px]">OBSIDIAN ATOMS</span>
+                        <span class="font-semibold text-neutral-900">Reactive Clusters</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 3: Macro Cellular Face & Voronoi Dermis (55% - 85% Scroll) -->
+        <section class="min-h-screen w-full flex items-center justify-start px-5 sm:px-10 md:px-20 py-24">
+            <div class="max-w-md studio-glass rounded-3xl p-6 sm:p-8 interactive-ui">
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-neutral-900 text-white font-mono-tech text-[11px] mb-4">
+                    <span>STAGE 03 // CELLULAR DERMIS</span>
+                </div>
+                <h2 class="font-display text-2xl sm:text-4xl font-bold tracking-tight text-neutral-900 leading-tight mb-3">
+                    Granular Morphogenesis.
+                </h2>
+                <p class="text-neutral-700 text-sm sm:text-base leading-relaxed mb-5">
+                    At macro proximity, the packed cellular spheres across the bridge of the nose, cheekbones, and brow ripple organically under cursor velocity—bridging the boundary between solid sculpture and particulate cloud.
+                </p>
+                <button onclick="window.triggerShockwave()" class="w-full py-2.5 rounded-xl bg-neutral-900 hover:bg-neutral-800 text-white font-mono-tech text-xs tracking-wide transition shadow">
+                    TRIGGER RADIAL ATOMIC PULSE
+                </button>
+            </div>
+        </section>
+
+        <!-- SECTION 4: Tactile Hand & Phalangeal Atom Clusters (85% - 100% Scroll) -->
+        <section class="min-h-screen w-full flex items-end justify-end px-5 sm:px-10 md:px-20 pb-24 pt-36">
+            <div class="max-w-md studio-glass rounded-3xl p-6 sm:p-8 interactive-ui">
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-neutral-900 text-white font-mono-tech text-[11px] mb-4">
+                    <span>STAGE 04 // KINETIC ARTICULATION</span>
+                </div>
+                <h2 class="font-display text-2xl sm:text-4xl font-bold tracking-tight text-neutral-900 leading-tight mb-3">
+                    Tactile Horizon.
+                </h2>
+                <p class="text-neutral-700 text-sm sm:text-base leading-relaxed mb-5">
+                    Focused on the sculpted hand and dark spherical clusters along the fingers. Sweep across the phalanges to scatter and re-stabilize the orbital spheres before returning to the full composition.
+                </p>
+                <div class="flex items-center justify-between gap-3">
+                    <button onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="flex-1 py-2.5 rounded-xl bg-neutral-900 hover:bg-neutral-800 text-white font-mono-tech text-xs tracking-wide transition">
+                        ↑ RESET CAMERA DOLLY
+                    </button>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        /**
+         * INTERACTIVE NEURAL PLEXUS & ATOMIC MESH ENGINE
+         * Uses the exact uploaded image `image_9097d7.jpg` mapped onto a high-density elastic spring mesh
+         * combined with an anatomically calibrated 3D-shaded node & atom physics overlay.
+         */
+        (() => {
+            const canvas = document.getElementById('interactive-canvas');
+            const ctx = canvas.getContext('2d', { alpha: false });
+            const cursorProbe = document.getElementById('cursor-probe');
+
+            // HUD & UI Elements
+            const hudZoom = document.getElementById('hud-zoom');
+            const hudNodes = document.getElementById('hud-nodes');
+            const hudEnergy = document.getElementById('hud-energy');
+            const scrollProgressBar = document.getElementById('scroll-progress-bar');
+            const scrollPctText = document.getElementById('scroll-pct-text');
+
+            // Physics & Control State
+            const state = {
+                width: window.innerWidth,
+                height: window.innerHeight,
+                dpr: Math.min(window.devicePixelRatio || 1, 2),
+                scrollProgress: 0,
+                smoothScroll: 0,
+                maxZoom: 2.85,
+                hoverRadius: 165,
+                forceStrength: 1.35,
+                repelMode: true, // true = repel + swirl, false = magnetic attract
+                showPlexusOverlay: true,
+                pureCanvasMode: false,
+                mouse: {
+                    x: -9999,
+                    y: -9999,
+                    vx: 0,
+                    vy: 0,
+                    prevX: -9999,
+                    prevY: -9999,
+                    active: false
+                },
+                shockwaves: []
+            };
+
+            // Load Exact User Artwork (`image_9097d7.jpg`)
+            const sourceImage = new Image();
+            sourceImage.crossOrigin = "anonymous";
+            let imageLoaded = false;
+
+            sourceImage.onload = () => {
+                imageLoaded = true;
+                initMeshAndAtoms();
+            };
+            sourceImage.onerror = () => {
+                // Keep procedural fallback if preview environment delays local asset
+                imageLoaded = false;
+                initMeshAndAtoms();
+            };
+            sourceImage.src = 'image_9097d7.jpg';
+
+            // Elastic Deformable Image Mesh Grid (allows the actual pixels of the image's atoms/spheres to warp on hover)
+            const MESH_COLS = 34;
+            const MESH_ROWS = 44;
+            let meshVertices = [];
+
+            // Synchronized 3D Interactive Nodes & Atoms mapped directly onto `image_9097d7.jpg` coordinates
+            // Normalized coordinates (u: 0..1 left-to-right, v: 0..1 top-to-bottom of image_9097d7.jpg)
+            let atoms = [];
+            let plexusEdges = [];
+
+            /**
+             * Anatomically calibrated regions on `image_9097d7.jpg` (736 x 920 aspect ~0.8):
+             * - Crown & Upper Right Disintegration Plume: u [0.52..0.95], v [0.02..0.34]
+             * - Left Cranial Geometric Wireframe Cage: u [0.35..0.68], v [0.09..0.46]
+             * - Central-Right Cellular Face / Nose / Cheek: u [0.48..0.82], v [0.24..0.60]
+             * - Sculpted Hand & Black Spherical Finger Clusters: u [0.16..0.49], v [0.46..0.86]
+             * - Lower-Left & Bottom Trailing Plexus Filaments: u [0.04..0.68], v [0.58..0.96]
+             */
+            function initMeshAndAtoms() {
+                // 1. Initialize Elastic Image Warp Grid
+                meshVertices = [];
+                for (let r = 0; r <= MESH_ROWS; r++) {
+                    for (let c = 0; c <= MESH_COLS; c++) {
+                        const u = c / MESH_COLS;
+                        const v = r / MESH_ROWS;
+                        // Weight elasticity higher on the disintegrating node/atom regions of the artwork
+                        const inFigureZone = isInsideSculptureZone(u, v);
+                        meshVertices.push({
+                            u,
+                            v,
+                            ox: 0, // current offset in normalized image space
+                            oy: 0,
+                            vx: 0,
+                            vy: 0,
+                            reactivity: inFigureZone ? 1.0 : 0.15
+                        });
+                    }
+                }
+
+                // 2. Initialize Interactive 3D-Shaded Nodes & Atoms aligned to the exact artwork features
+                atoms = [];
+
+                // Helper to add calibrated node
+                const addAtom = (u, v, radius, type, depth, linkedMesh) => {
+                    atoms.push({
+                        u,
+                        v,
+                        ox: 0, // displacement in screen/model pixels
+                        oy: 0,
+                        vx: 0,
+                        vy: 0,
+                        radius,
+                        type, // 'black-atom', 'white-node', 'gray-cell'
+                        depth, // 0.5 (far) to 1.6 (near) for 3D parallax
+                        linkedMesh, // whether it pulls plexus lines
+                        phase: Math.random() * Math.PI * 2
+                    });
+                };
+
+                // A. Key Landmark White & Black Structural Plexus Nodes (Exact perimeter & interior vertices from image_9097d7.jpg)
+                const structuralLandmarks = [
+                    // Crown & Upper Left Wireframe Perimeter
+                    [0.608, 0.088, 4.5, 'white-node'], [0.435, 0.194, 4.2, 'black-atom'],
+                    [0.360, 0.368, 5.2, 'white-node'], [0.402, 0.298, 3.5, 'white-node'],
+                    [0.526, 0.242, 4.0, 'black-atom'], [0.635, 0.165, 3.8, 'white-node'],
+                    [0.710, 0.118, 4.5, 'white-node'], [0.742, 0.072, 3.5, 'black-atom'],
+                    [0.805, 0.132, 4.2, 'black-atom'], [0.852, 0.205, 4.2, 'black-atom'],
+                    [0.840, 0.105, 3.8, 'black-atom'], [0.946, 0.095, 3.6, 'black-atom'],
+                    // Mid-Head & Cheek Disintegration Transition
+                    [0.465, 0.352, 3.8, 'black-atom'], [0.545, 0.335, 4.0, 'white-node'],
+                    [0.625, 0.278, 3.6, 'white-node'], [0.675, 0.350, 3.4, 'white-node'],
+                    [0.535, 0.482, 4.4, 'white-node'], [0.398, 0.460, 3.8, 'black-atom'],
+                    // Hand & Finger White Accent Spheres & Joint Nodes
+                    [0.302, 0.578, 5.8, 'white-node'], [0.246, 0.598, 4.6, 'white-node'],
+                    [0.338, 0.655, 5.4, 'white-node'], [0.373, 0.708, 6.2, 'white-node'],
+                    [0.128, 0.672, 5.5, 'white-node'], [0.198, 0.630, 4.2, 'black-atom'],
+                    [0.245, 0.785, 4.5, 'black-atom'], [0.275, 0.880, 4.2, 'black-atom'],
+                    // Bottom-Left & Lower-Right Plexus Anchor Tips
+                    [0.085, 0.896, 3.6, 'white-node'], [0.125, 0.808, 3.5, 'white-node'],
+                    [0.165, 0.908, 3.2, 'black-atom'], [0.392, 0.858, 3.8, 'black-atom'],
+                    [0.515, 0.735, 3.8, 'black-atom'], [0.602, 0.640, 3.5, 'black-atom'],
+                    [0.672, 0.715, 3.6, 'black-atom']
+                ];
+
+                structuralLandmarks.forEach(([u, v, r, type]) => {
+                    addAtom(u, v, r, type, 0.95 + Math.random() * 0.55, true);
+                });
+
+                // B. Finger Phalanges Dense Black Sphere Clusters (matching the dark glossy spheres on the hand)
+                const fingerBands = [
+                    // Index finger
+                    { u1: 0.26, v1: 0.59, u2: 0.37, v2: 0.47, count: 24 },
+                    // Middle finger
+                    { u1: 0.28, v1: 0.65, u2: 0.46, v2: 0.55, count: 24 },
+                    // Ring finger
+                    { u1: 0.30, v1: 0.69, u2: 0.48, v2: 0.64, count: 22 },
+                    // Little finger
+                    { u1: 0.28, v1: 0.74, u2: 0.45, v2: 0.72, count: 18 }
+                ];
+
+                fingerBands.forEach(band => {
+                    for (let i = 0; i < band.count; i++) {
+                        const t = i / band.count;
+                        const jitterU = (Math.random() - 0.5) * 0.032;
+                        const jitterV = (Math.random() - 0.5) * 0.028;
+                        const u = band.u1 + (band.u2 - band.u1) * t + jitterU;
+                        const v = band.v1 + (band.v2 - band.v1) * t + jitterV;
+                        const type = Math.random() > 0.9 ? 'white-node' : 'black-atom';
+                        addAtom(u, v, 2.4 + Math.random() * 2.8, type, 1.0 + Math.random() * 0.45, Math.random() > 0.6);
+                    }
+                });
+
+                // C. Face Cellular Boundary & Disintegrating Cheek/Forehead Atoms
+                for (let i = 0; i < 85; i++) {
+                    const u = 0.45 + Math.random() * 0.34;
+                    const v = 0.22 + Math.random() * 0.38;
+                    // Concentrate along the left disintegrating boundary of the face & upper brow
+                    const distFromBoundary = Math.abs((u - 0.56) + (v - 0.38) * 0.55);
+                    if (distFromBoundary < 0.16) {
+                        const isDark = u < 0.62 || Math.random() > 0.45;
+                        addAtom(
+                            u,
+                            v,
+                            1.8 + Math.random() * 2.6,
+                            isDark ? 'black-atom' : 'gray-cell',
+                            0.85 + Math.random() * 0.6,
+                            distFromBoundary > 0.06 && Math.random() > 0.35
+                        );
+                    }
+                }
+
+                // D. Crown & Upper-Right Floating Spores / Escaping Atoms
+                for (let i = 0; i < 65; i++) {
+                    const u = 0.58 + Math.random() * 0.38;
+                    const v = 0.015 + Math.random() * 0.42;
+                    if (u + (1 - v) > 1.32) {
+                        const type = Math.random() > 0.3 ? 'black-atom' : 'gray-cell';
+                        const linked = u < 0.87 && v > 0.07 && Math.random() > 0.25;
+                        addAtom(u, v, 1.6 + Math.random() * 2.8, type, 0.7 + Math.random() * 0.75, linked);
+                    }
+                }
+
+                // E. Lower-Left & Neck Web Nodes
+                for (let i = 0; i < 42; i++) {
+                    const u = 0.14 + Math.random() * 0.56;
+                    const v = 0.52 + Math.random() * 0.38;
+                    addAtom(
+                        u,
+                        v,
+                        1.8 + Math.random() * 2.5,
+                        Math.random() > 0.22 ? 'black-atom' : 'white-node',
+                        0.85 + Math.random() * 0.5,
+                         true
+                    );
+                }
+
+                // 3. Build Plexus Edges between nearby linked nodes
+                plexusEdges = [];
+                for (let i = 0; i < atoms.length; i++) {
+                    if (!atoms[i].linkedMesh) continue;
+                    for (let j = i + 1; j < atoms.length; j++) {
+                        if (!atoms[j].linkedMesh) continue;
+                        const du = atoms[i].u - atoms[j].u;
+                        const dv = atoms[i].v - atoms[j].v;
+                        const dist = Math.hypot(du, dv);
+                        // Connect nodes within calibrated anatomical neighborhood
+                        if (dist > 0.025 && dist < 0.135) {
+                            // Prefer white lines in upper-left/mid-face and black lines in crown/hand/lower web
+                            const avgU = (atoms[i].u + atoms[j].u) * 0.5;
+                            const avgV = (atoms[i].v + atoms[j].v) * 0.5;
+                            const isWhiteThread =
+                                (atoms[i].type === 'white-node' || atoms[j].type === 'white-node') ||
+                                (avgU < 0.66 && avgV < 0.52 && Math.random() > 0.42);
+
+                            plexusEdges.push({
+                                a: i,
+                                b: j,
+                                restDist: dist,
+                                isWhite: isWhiteThread,
+                                alpha: Math.max(0.18, 1 - dist / 0.14)
+                            });
+                        }
+                    }
+                }
+            }
+
+            // Determines if a normalized (u,v) coordinate falls on the sculptural head, hand, or plexus cloud
+            function isInsideSculptureZone(u, v) {
+                // Head & Crown region
+                const inHead = Math.hypot((u - 0.64) * 1.2, (v - 0.34)) < 0.34;
+                // Hand & Forearm region
+                const inHand = Math.hypot((u - 0.32) * 1.1, (v - 0.67)) < 0.28;
+                // Upper right spore plume
+                const inPlume = u > 0.55 && v < 0.35;
+                return inHead || inHand || inPlume;
+            }
+
+            /**
+             * Camera Dolly & Focal Path Interpolator ("while scrolling it should get closer")
+             * Smoothly transitions from full figure view (scroll = 0) -> Crown Lattice -> Macro Face -> Tactile Hand
+             */
+            function getCameraTransform(progress) {
+                // Define focal waypoints in normalized artwork coordinates (u, v) and zoom multipliers
+                const waypoints = [
+                    { t: 0.00, u: 0.50, v: 0.49, zoom: 1.00, rot: 0.000 }, // Full sculptural view
+                    { t: 0.33, u: 0.63, v: 0.25, zoom: 1.85, rot: -0.025 }, // Upper cranial plexus & brow
+                    { t: 0.68, u: 0.63, v: 0.41, zoom: state.maxZoom, rot: 0.020 }, // Macro cellular face & eyes/nose
+                    { t: 1.00, u: 0.35, v: 0.64, zoom: state.maxZoom * 0.88, rot: -0.018 } // Hand & black finger atom clusters
+                ];
+
+                // Find segment
+                let idx = 0;
+                for (let i = 0; i < waypoints.length - 1; i++) {
+                    if (progress >= waypoints[i].t && progress <= waypoints[i + 1].t) {
+                        idx = i;
+                        break;
+                    }
+                }
+
+                const w0 = waypoints[idx];
+                const w1 = waypoints[idx + 1];
+                const localT = (progress - w0.t) / Math.max(0.0001, w1.t - w0.t);
+                // Smoothstep easing
+                const s = localT * localT * (3 - 2 * localT);
+
+                // Scale dynamic zoom by user's Zoom Intensity slider
+                const zoomScaleFactor = (state.maxZoom - 1) / (2.85 - 1);
+                const rawZoom = w0.zoom + (w1.zoom - w0.zoom) * s;
+                const zoom = 1 + (rawZoom - 1) * zoomScaleFactor;
+
+                return {
+                    u: w0.u + (w1.u - w0.u) * s,
+                    v: w0.v + (w1.v - w0.v) * s,
+                    zoom,
+                    rot: w0.rot + (w1.rot - w0.rot) * s
+                };
+            }
+
+            // Trigger Radial Shockwave across all atoms and mesh vertices
+            window.triggerShockwave = (originX, originY) => {
+                const cx = typeof originX === 'number' ? originX : state.width * 0.52;
+                const cy = typeof originY === 'number' ? originY : state.height * 0.48;
+                state.shockwaves.push({
+                    x: cx,
+                    y: cy,
+                    radius: 10,
+                    maxRadius: Math.max(state.width, state.height) * 0.95,
+                    speed: 18,
+                    strength: 28 * state.forceStrength
+                });
+            };
+
+            /**
+             * Textured Triangle Rasterizer (renders each cell of `image_9097d7.jpg` with elastic vertex displacement)
+             */
+            function drawTexturedTriangle(img, x0, y0, x1, y1, x2, y2, u0, v0, u1, v1, u2, v2) {
+                // Slightly expand triangle clip in screen space by 0.45px to prevent subpixel seams
+                const cx = (x0 + x1 + x2) / 3;
+                const cy = (y0 + y1 + y2) / 3;
+                const expand = 0.55;
+                const ex0 = x0 + (x0 - cx > 0 ? expand : -expand);
+                const ey0 = y0 + (y0 - cy > 0 ? expand : -expand);
+                const ex1 = x1 + (x1 - cx > 0 ? expand : -expand);
+                const ey1 = y1 + (y1 - cy > 0 ? expand : -expand);
+                const ex2 = x2 + (x2 - cx > 0 ? expand : -expand);
+                const ey2 = y2 + (y2 - cy > 0 ? expand : -expand);
+
+                ctx.save();
+                ctx.beginPath();
+                ctx.moveTo(ex0, ey0);
+                ctx.lineTo(ex1, ey1);
+                ctx.lineTo(ex2, ey2);
+                ctx.closePath();
+                ctx.clip();
+
+                // Affine transformation matrix mapping (u,v) in source image pixels to (x,y) on canvas
+                const du1 = u1 - u0;
+                const dv1 = v1 - v0;
+                const du2 = u2 - u0;
+                const dv2 = v2 - v0;
+                const dx1 = x1 - x0;
+                const dy1 = y1 - y0;
+                const dx2 = x2 - x0;
+                const dy2 = y2 - y0;
+
+                const det = du1 * dv2 - du2 * dv1;
+                if (Math.abs(det) > 1e-6) {
+                    const invDet = 1 / det;
+                    const a = (dv2 * dx1 - dv1 * dx2) * invDet;
+                    const b = (dv2 * dy1 - dv1 * dy2) * invDet;
+                    const c = (-du2 * dx1 + du1 * dx2) * invDet;
+                    const d = (-du2 * dy1 + du1 * dy2) * invDet;
+                    const e = x0 - a * u0 - c * v0;
+                    const f = y0 - b * u0 - d * v0;
+
+                    ctx.transform(a, b, c, d, e, f);
+                    ctx.drawImage(img, 0, 0);
+                }
+                ctx.restore();
+            }
+
+            /**
+             * Main Physics & Render Loop
+             */
+            function renderLoop(timestamp) {
+                const time = timestamp * 0.001;
+
+                // 1. Smoothly interpolate scroll progress
+                const maxScroll = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+                state.scrollProgress = Math.min(1, Math.max(0, window.scrollY / maxScroll));
+                state.smoothScroll += (state.scrollProgress - state.smoothScroll) * 0.075;
+
+                // Update Scroll UI
+                const pct = Math.round(state.smoothScroll * 100);
+                scrollProgressBar.style.height = `${pct}%`;
+                scrollPctText.textContent = `${pct}%`;
+
+                // 2. Calculate Camera Transform based on scroll position + subtle mouse parallax
+                const cam = getCameraTransform(state.smoothScroll);
+                const parallaxX = state.mouse.active ? ((state.mouse.x / state.width) - 0.5) * 28 : 0;
+                const parallaxY = state.mouse.active ? ((state.mouse.y / state.height) - 0.5) * 28 : 0;
+
+                // Clear studio background matching the exact neutral gray vignette of `image_9097d7.jpg`
+                const bgGrad = ctx.createRadialGradient(
+                    state.width * 0.52, state.height * 0.48, state.height * 0.05,
+                    state.width * 0.50, state.height * 0.50, Math.max(state.width, state.height) * 0.78
+                );
+                bgGrad.addColorStop(0, '#dedede');
+                bgGrad.addColorStop(0.65, '#d4d4d4');
+                bgGrad.addColorStop(1, '#c6c6c6');
+                ctx.fillStyle = bgGrad;
+                ctx.fillRect(0, 0, state.width, state.height);
+
+                // Determine base artwork frame dimensions preserving exact 736x920 (0.80) aspect ratio
+                const imgAspect = imageLoaded ? (sourceImage.width / sourceImage.height) : (736 / 920);
+                const baseHeight = Math.min(state.height * 0.96, state.width / imgAspect * 1.05);
+                const baseWidth = baseHeight * imgAspect;
+
+                const scaledWidth = baseWidth * cam.zoom;
+                const scaledHeight = baseHeight * cam.zoom;
+
+                // Center camera on the active focal waypoint (cam.u, cam.v)
+                const originX = state.width * 0.5 - cam.u * scaledWidth - parallaxX * cam.zoom * 0.45;
+                const originY = state.height * 0.5 - cam.v * scaledHeight - parallaxY * cam.zoom * 0.45;
+
+                // Update active shockwaves
+                for (let i = state.shockwaves.length - 1; i >= 0; i--) {
+                    const sw = state.shockwaves[i];
+                    sw.radius += sw.speed;
+                    if (sw.radius > sw.maxRadius) {
+                        state.shockwaves.splice(i, 1);
+                    }
+                }
+
+                // 3. Update Deformable Image Mesh Vertices (so the underlying pixels of `image_9097d7.jpg` physically move with the cursor)
+                const hoverRad = state.hoverRadius;
+                const screenMeshPts = new Array(meshVertices.length);
+
+                for (let i = 0; i < meshVertices.length; i++) {
+                    const v = meshVertices[i];
+                    const restX = originX + v.u * scaledWidth;
+                    const restY = originY + v.v * scaledHeight;
+                    const curX = restX + v.ox;
+                    const curY = restY + v.oy;
+
+                    // Cursor hover force on underlying artwork mesh
+                    if (state.mouse.active && v.reactivity > 0.2) {
+                        const dx = curX - state.mouse.x;
+                        const dy = curY - state.mouse.y;
+                        const dist = Math.hypot(dx, dy);
+                        if (dist < hoverRad && dist > 0.001) {
+                            const falloff = Math.pow(1 - dist / hoverRad, 2);
+                            const dir = state.repelMode ? 1 : -0.65;
+                            // Radial push + subtle tangential swirl + mouse velocity drag
+                            const nx = dx / dist;
+                            const ny = dy / dist;
+                            const force = falloff * 3.8 * state.forceStrength * v.reactivity;
+
+                            v.vx += (nx * dir - ny * 0.35) * force + state.mouse.vx * falloff * 0.14;
+                            v.vy += (ny * dir + nx * 0.35) * force + state.mouse.vy * falloff * 0.14;
+                        }
+                    }
+
+                    // Shockwave force on mesh
+                    for (let s = 0; s < state.shockwaves.length; s++) {
+                        const sw = state.shockwaves[s];
+                        const dx = curX - sw.x;
+                        const dy = curY - sw.y;
+                        const dist = Math.hypot(dx, dy);
+                        const band = Math.abs(dist - sw.radius);
+                        if (band < 65 && dist > 1) {
+                            const push = (1 - band / 65) * sw.strength * 0.22 * v.reactivity;
+                            v.vx += (dx / dist) * push;
+                            v.vy += (dy / dist) * push;
+                        }
+                    }
+
+                    // Spring back to exact anatomical position
+                    v.vx += -v.ox * 0.095;
+                    v.vy += -v.oy * 0.095;
+                    v.vx *= 0.82;
+                    v.vy *= 0.82;
+                    v.ox += v.vx;
+                    v.oy += v.vy;
+
+                    screenMeshPts[i] = {
+                        x: restX + v.ox,
+                        y: restY + v.oy,
+                        u: v.u * (imageLoaded ? sourceImage.width : 736),
+                        v: v.v * (imageLoaded ? sourceImage.height : 920)
+                    };
+                }
+
+                // 4. Render the Elastic Warped Exact Image (`image_9097d7.jpg`)
+                if (imageLoaded) {
+                    const stride = MESH_COLS + 1;
+                    for (let r = 0; r < MESH_ROWS; r++) {
+                        for (let c = 0; c < MESH_COLS; c++) {
+                            const i00 = r * stride + c;
+                            const i10 = i00 + 1;
+                            const i01 = (r + 1) * stride + c;
+                            const i11 = i01 + 1;
+
+                            const p00 = screenMeshPts[i00];
+                            const p10 = screenMeshPts[i10];
+                            const p01 = screenMeshPts[i01];
+                            const p11 = screenMeshPts[i11];
+
+                            // Cull offscreen quads for 60fps performance when zoomed in
+                            const minX = Math.min(p00.x, p10.x, p01.x, p11.x);
+                            const maxX = Math.max(p00.x, p10.x, p01.x, p11.x);
+                            const minY = Math.min(p00.y, p10.y, p01.y, p11.y);
+                            const maxY = Math.max(p00.y, p10.y, p01.y, p11.y);
+                            if (maxX < -20 || minX > state.width + 20 || maxY < -20 || minY > state.height + 20) {
+                                continue;
+                            }
+
+                            drawTexturedTriangle(
+                                sourceImage,
+                                p00.x, p00.y, p10.x, p10.y, p01.x, p01.y,
+                                p00.u, p00.v, p10.u, p10.v, p01.u, p01.v
+                            );
+                            drawTexturedTriangle(
+                                sourceImage,
+                                p10.x, p10.y, p11.x, p11.y, p01.x, p01.y,
+                                p10.u, p10.v, p11.u, p11.v, p01.u, p01.v
+                            );
+                        }
+                    }
+                }
+
+                // 5. Update & Render Synchronized 3D Interactive Nodes, Atoms & Connecting Plexus Filaments
+                let activeDisplacedNodes = 0;
+                let totalKineticEnergy = 0;
+
+                const atomScreenCoords = new Array(atoms.length);
+
+                for (let i = 0; i < atoms.length; i++) {
+                    const a = atoms[i];
+                    // Ambient micro-breathing motion
+                    const breatheX = Math.sin(time * 1.4 + a.phase) * 1.3 * cam.zoom;
+                    const breatheY = Math.cos(time * 1.1 + a.phase * 1.3) * 1.3 * cam.zoom;
+
+                    // Depth-based parallax offset
+                    const depthOffsetX = parallaxX * (a.depth - 1.0) * 0.95;
+                    const depthOffsetY = parallaxY * (a.depth - 1.0) * 0.95;
+
+                    const restX = originX + a.u * scaledWidth + breatheX + depthOffsetX;
+                    const restY = originY + a.v * scaledHeight + breatheY + depthOffsetY;
+
+                    const curX = restX + a.ox;
+                    const curY = restY + a.oy;
+
+                    // Interactive Hover Physics on Individual Nodes & Atoms
+                    if (state.mouse.active) {
+                        const dx = curX - state.mouse.x;
+                        const dy = curY - state.mouse.y;
+                        const dist = Math.hypot(dx, dy);
+                        const effectiveRadius = hoverRad * (0.85 + a.depth * 0.25);
+
+                        if (dist < effectiveRadius && dist > 0.001) {
+                            activeDisplacedNodes++;
+                            const falloff = Math.pow(1 - dist / effectiveRadius, 1.85);
+                            const nx = dx / dist;
+                            const ny = dy / dist;
+                            const dir = state.repelMode ? 1 : -0.75;
+                            const orbital = 0.48; // tangential orbital spin around cursor
+
+                            const impulse = falloff * 5.6 * state.forceStrength * a.depth;
+                            a.vx += (nx * dir - ny * orbital) * impulse + state.mouse.vx * falloff * 0.22;
+                            a.vy += (ny * dir + nx * orbital) * impulse + state.mouse.vy * falloff * 0.22;
+                        }
+                    }
+
+                    // Shockwave Impulse on Individual Atoms
+                    for (let s = 0; s < state.shockwaves.length; s++) {
+                        const sw = state.shockwaves[s];
+                        const dx = curX - sw.x;
+                        const dy = curY - sw.y;
+                        const dist = Math.hypot(dx, dy);
+                        const band = Math.abs(dist - sw.radius);
+                        if (band < 75 && dist > 1) {
+                            const push = (1 - band / 75) * sw.strength * 0.45 * a.depth;
+                            a.vx += (dx / dist) * push;
+                            a.vy += (dy / dist) * push;
+                        }
+                    }
+
+                    // Elastic Hooke's Law restoration
+                    a.vx += -a.ox * 0.075;
+                    a.vy += -a.oy * 0.075;
+                    a.vx *= 0.85;
+                    a.vy *= 0.85;
+
+                    a.ox += a.vx;
+                    a.oy += a.vy;
+
+                    const speedSq = a.vx * a.vx + a.vy * a.vy;
+                    totalKineticEnergy += speedSq * 0.05;
+
+                    atomScreenCoords[i] = {
+                        x: restX + a.ox,
+                        y: restY + a.oy,
+                        r: a.radius * Math.pow(cam.zoom, 0.72),
+                        disp: Math.hypot(a.ox, a.oy)
+                    };
+                }
+
+                // Draw Dynamic Plexus Connecting Lines
+                if (state.showPlexusOverlay) {
+                    ctx.save();
+                    for (let i = 0; i < plexusEdges.length; i++) {
+                        const edge = plexusEdges[i];
+                        const pA = atomScreenCoords[edge.a];
+                        const pB = atomScreenCoords[edge.b];
+
+                        // Frustum check
+                        if ((pA.x < -50 && pB.x < -50) || (pA.x > state.width + 50 && pB.x > state.width + 50) ||
+                            (pA.y < -50 && pB.y < -50) || (pA.y > state.height + 50 && pB.y > state.height + 50)) {
+                            continue;
+                        }
+
+                        // Boost line visibility when connected nodes are actively displaced by cursor
+                        const displacementBoost = Math.min(1, (pA.disp + pB.disp) / 35);
+                        const baseAlpha = edge.alpha * (0.42 + displacementBoost * 0.55);
+
+                        ctx.beginPath();
+                        ctx.moveTo(pA.x, pA.y);
+                        ctx.lineTo(pB.x, pB.y);
+                        ctx.lineWidth = (0.75 + displacementBoost * 0.75) * Math.min(1.6, Math.sqrt(cam.zoom));
+
+                        if (edge.isWhite) {
+                            ctx.strokeStyle = `rgba(250, 250, 250, ${baseAlpha})`;
+                        } else {
+                            ctx.strokeStyle = `rgba(22, 22, 22, ${baseAlpha})`;
+                        }
+                        ctx.stroke();
+                    }
+
+                    // Draw Cursor-to-Atom Magnetic Tension Filaments when hovering near nodes
+                    if (state.mouse.active) {
+                        for (let i = 0; i < atoms.length; i++) {
+                            const p = atomScreenCoords[i];
+                            const d = Math.hypot(p.x - state.mouse.x, p.y - state.mouse.y);
+                            if (d < hoverRad * 0.92) {
+                                const alpha = (1 - d / (hoverRad * 0.92)) * 0.28;
+                                ctx.beginPath();
+                                ctx.moveTo(state.mouse.x, state.mouse.y);
+                                ctx.lineTo(p.x, p.y);
+                                ctx.lineWidth = 0.7;
+                                ctx.strokeStyle = atoms[i].type === 'white-node'
+                                    ? `rgba(255,255,255,${alpha * 1.4})`
+                                    : `rgba(18,18,18,${alpha})`;
+                                ctx.stroke();
+                            }
+                        }
+                    }
+                    ctx.restore();
+                }
+
+                // Draw 3D-Shaded Spherical Atoms & Nodes (matching the exact matte/glossy black, gray, and white spheres in `image_9097d7.jpg`)
+                for (let i = 0; i < atoms.length; i++) {
+                    const a = atoms[i];
+                    const p = atomScreenCoords[i];
+
+                    if (p.x < -30 || p.x > state.width + 30 || p.y < -30 || p.y > state.height + 30) {
+                        continue;
+                    }
+
+                    // Subtle ghost trail line back to rest coordinate when stretched
+                    if (p.disp > 4.5 && state.showPlexusOverlay) {
+                        ctx.beginPath();
+                        ctx.moveTo(p.x - a.ox, p.y - a.oy);
+                        ctx.lineTo(p.x, p.y);
+                        ctx.strokeStyle = a.type === 'white-node'
+                            ? 'rgba(255, 255, 255, 0.35)'
+                            : 'rgba(20, 20, 20, 0.22)';
+                        ctx.lineWidth = 0.65;
+                        ctx.stroke();
+                    }
+
+                    // 3D Lit Sphere Gradient
+                    const r = Math.max(1.5, p.r * (1 + Math.min(0.45, p.disp / 60)));
+                    const grad = ctx.createRadialGradient(
+                        p.x - r * 0.32,
+                        p.y - r * 0.32,
+                        r * 0.1,
+                        p.x,
+                        p.y,
+                        r
+                    );
+
+                    if (a.type === 'white-node') {
+                        grad.addColorStop(0, '#ffffff');
+                        grad.addColorStop(0.65, '#eaeaea');
+                        grad.addColorStop(1, '#9e9e9e');
+                    } else if (a.type === 'gray-cell') {
+                        grad.addColorStop(0, '#9a9a9a');
+                        grad.addColorStop(0.6, '#525252');
+                        grad.addColorStop(1, '#242424');
+                    } else {
+                        // 'black-atom' with studio specular highlight matching the fingers & crown spheres
+                        grad.addColorStop(0, '#595959');
+                        grad.addColorStop(0.35, '#222222');
+                        grad.addColorStop(1, '#090909');
+                    }
+
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
+                    ctx.fillStyle = grad;
+                    ctx.fill();
+                }
+
+                // Draw Expanding Shockwave Ring if active
+                for (let s = 0; s < state.shockwaves.length; s++) {
+                    const sw = state.shockwaves[s];
+                    const alpha = Math.max(0, 1 - sw.radius / sw.maxRadius) * 0.35;
+                    ctx.beginPath();
+                    ctx.arc(sw.x, sw.y, sw.radius, 0, Math.PI * 2);
+                    ctx.strokeStyle = `rgba(20, 20, 20, ${alpha})`;
+                    ctx.lineWidth = 1.5;
+                    ctx.stroke();
+                }
+
+                // Decay mouse velocity
+                state.mouse.vx *= 0.8;
+                state.mouse.vy *= 0.8;
+
+                // Update Telemetry Readouts
+                hudZoom.textContent = `${cam.zoom.toFixed(2)}x`;
+                hudNodes.textContent = `${activeDisplacedNodes} / ${atoms.length}`;
+                hudEnergy.textContent = `${Math.min(99.9, totalKineticEnergy).toFixed(2)} J`;
+
+                if (activeDisplacedNodes > 0) {
+                    cursorProbe.classList.add('active-atom');
+                } else {
+                    cursorProbe.classList.remove('active-atom');
+                }
+
+                requestAnimationFrame(renderLoop);
+            }
+
+            // Resize Handler
+            function handleResize() {
+                state.width = window.innerWidth;
+                state.height = window.innerHeight;
+                canvas.width = state.width * state.dpr;
+                canvas.height = state.height * state.dpr;
+                ctx.setTransform(state.dpr, 0, 0, state.dpr, 0, 0);
+            }
+
+            window.addEventListener('resize', handleResize);
+            handleResize();
+
+            // Pointer / Hover Event Listeners
+            window.addEventListener('pointermove', (e) => {
+                if (state.mouse.prevX > -1000) {
+                    state.mouse.vx = (e.clientX - state.mouse.prevX) * 0.35;
+                    state.mouse.vy = (e.clientY - state.mouse.prevY) * 0.35;
+                }
+                state.mouse.prevX = e.clientX;
+                state.mouse.prevY = e.clientY;
+                state.mouse.x = e.clientX;
+                state.mouse.y = e.clientY;
+                state.mouse.active = true;
+
+                cursorProbe.style.left = `${e.clientX}px`;
+                cursorProbe.style.top = `${e.clientY}px`;
+            });
+
+            window.addEventListener('pointerdown', (e) => {
+                // Ignore clicks inside UI controls
+                if (e.target.closest('.interactive-ui')) return;
+                window.triggerShockwave(e.clientX, e.clientY);
+            });
+
+            window.addEventListener('pointerleave', () => {
+                state.mouse.active = false;
+                state.mouse.x = -9999;
+                state.mouse.y = -9999;
+            });
+
+            // TouchMove Support for mobile devices
+            window.addEventListener('touchmove', (e) => {
+                if (e.touches.length > 0) {
+                    const t = e.touches[0];
+                    state.mouse.x = t.clientX;
+                    state.mouse.y = t.clientY;
+                    state.mouse.active = true;
+                }
+            }, { passive: true });
+
+            window.addEventListener('touchend', () => {
+                state.mouse.active = false;
+            });
+
+            // UI Controls Wiring
+            const sliderRadius = document.getElementById('slider-radius');
+            const valRadius = document.getElementById('val-radius');
+            sliderRadius.addEventListener('input', (e) => {
+                state.hoverRadius = parseFloat(e.target.value);
+                valRadius.textContent = `${state.hoverRadius}px`;
+            });
+
+            const sliderStrength = document.getElementById('slider-strength');
+            const valStrength = document.getElementById('val-strength');
+            sliderStrength.addEventListener('input', (e) => {
+                state.forceStrength = parseFloat(e.target.value) / 100;
+                valStrength.textContent = `${state.forceStrength.toFixed(2)}x`;
+            });
+
+            const sliderZoom = document.getElementById('slider-zoom');
+            const valZoom = document.getElementById('val-zoom');
+            sliderZoom.addEventListener('input', (e) => {
+                state.maxZoom = parseFloat(e.target.value) / 100;
+                valZoom.textContent = `${state.maxZoom.toFixed(2)}x`;
+            });
+
+            const btnModeRepel = document.getElementById('btn-mode-repel');
+            btnModeRepel.addEventListener('click', () => {
+                state.repelMode = !state.repelMode;
+                btnModeRepel.textContent = state.repelMode ? 'Mode: Repel + Orbit' : 'Mode: Magnetic Attract';
+                btnModeRepel.className = state.repelMode
+                    ? 'flex-1 py-1.5 px-2.5 rounded-lg font-mono-tech text-[11px] bg-white text-neutral-900 font-semibold transition'
+                    : 'flex-1 py-1.5 px-2.5 rounded-lg font-mono-tech text-[11px] bg-emerald-400 text-neutral-950 font-semibold transition';
+            });
+
+            const btnWireframe = document.getElementById('btn-wireframe');
+            btnWireframe.addEventListener('click', () => {
+                state.showPlexusOverlay = !state.showPlexusOverlay;
+                btnWireframe.textContent = state.showPlexusOverlay ? 'Plexus: ON' : 'Plexus: OFF';
+            });
+
+            const btnPulseWave = document.getElementById('btn-pulse-wave');
+            btnPulseWave.addEventListener('click', () => {
+                window.triggerShockwave();
+            });
+
+            const btnToggleUI = document.getElementById('btn-toggle-ui');
+            const toggleUILabel = document.getElementById('toggle-ui-label');
+            const scrollContent = document.getElementById('scroll-content');
+            btnToggleUI.addEventListener('click', () => {
+                state.pureCanvasMode = !state.pureCanvasMode;
+                scrollContent.style.opacity = state.pureCanvasMode ? '0' : '1';
+                toggleUILabel.textContent = state.pureCanvasMode ? 'Pure Canvas: ON' : 'Pure Canvas: OFF';
+            });
+
+            const btnCollapseControls = document.getElementById('btn-collapse-controls');
+            const controlsBody = document.getElementById('controls-body');
+            let controlsCollapsed = false;
+            btnCollapseControls.addEventListener('click', () => {
+                controlsCollapsed = !controlsCollapsed;
+                controlsBody.style.display = controlsCollapsed ? 'none' : 'block';
+                btnCollapseControls.textContent = controlsCollapsed ? '[+]' : '[–]';
+            });
+
+            // Initialize fallback geometry immediately and start animation loop
+            initMeshAndAtoms();
+            requestAnimationFrame(renderLoop);
+        })();
+    </script>
+</body>
+</html>

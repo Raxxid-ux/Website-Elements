@@ -1,0 +1,1330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SYNAPSE // 3D Atomic & Plexus Human Form</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-center: #dcdcdc;
+      --bg-edge: #b8b8b8;
+    }
+
+    * {
+      box-sizing: border-box;
+      user-select: none;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body, html {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      background-color: #c8c8c8;
+      color: #141414;
+      font-family: 'Inter', sans-serif;
+      overflow-x: hidden;
+      scroll-behavior: smooth;
+    }
+
+    /* Exact studio radial gradient matching image_9097d7.jpg */
+    .studio-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      background: radial-gradient(circle at 52% 46%, #e2e2e2 0%, #d2d2d2 42%, #bdbdbd 78%, #adadad 100%);
+      pointer-events: none;
+    }
+
+    /* Subtle film grain for monochromatic realism */
+    .grain-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 2;
+      opacity: 0.035;
+      pointer-events: none;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+    }
+
+    /* Reference image alignment layer */
+    #ref-image-overlay {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      height: 94vh;
+      width: auto;
+      max-width: 95vw;
+      object-fit: contain;
+      z-index: 1;
+      opacity: 0;
+      pointer-events: none;
+      mix-blend-mode: multiply;
+      transition: opacity 0.25s ease, transform 0.1s linear;
+    }
+
+    /* Three.js Interactive Canvas */
+    #webgl-canvas {
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 3;
+      display: block;
+      cursor: crosshair;
+    }
+
+    /* Editorial Scroll Layout */
+    .scroll-container {
+      position: relative;
+      z-index: 10;
+      pointer-events: none;
+    }
+
+    .interactive-ui {
+      pointer-events: auto;
+    }
+
+    .font-display {
+      font-family: 'Space Grotesk', sans-serif;
+    }
+
+    /* Custom sleek range sliders */
+    input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 3px;
+      background: rgba(20, 20, 20, 0.18);
+      border-radius: 999px;
+      outline: none;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #111111;
+      cursor: pointer;
+      border: 2px solid #ffffff;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+      transition: transform 0.15s ease;
+    }
+
+    input[type="range"]::-webkit-slider-thumb:hover {
+      transform: scale(1.25);
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 5px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #c4c4c4;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #222222;
+      border-radius: 999px;
+    }
+
+    .glass-panel {
+      background: rgba(235, 235, 235, 0.72);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.55);
+      box-shadow: 0 12px 32px -8px rgba(0, 0, 0, 0.12);
+    }
+
+    @keyframes pulseRing {
+      0% { transform: scale(0.85); opacity: 0.7; }
+      50% { transform: scale(1.15); opacity: 0.25; }
+      100% { transform: scale(0.85); opacity: 0.7; }
+    }
+
+    .cursor-ring {
+      animation: pulseRing 2.4s infinite ease-in-out;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Studio Radial Backdrop matching uploaded artwork -->
+  <div class="studio-backdrop"></div>
+  <div class="grain-overlay"></div>
+
+  <!-- Exact Reference Image Layer (for pixel-accurate luminance sampling & optional visual blend check) -->
+  <img id="ref-image-overlay" src="image_9097d7.jpg" alt="Reference Sculpture" crossorigin="anonymous" />
+
+  <!-- 3D WebGL Background Canvas -->
+  <canvas id="webgl-canvas"></canvas>
+
+  <!-- Fixed Minimal Navigation Header -->
+  <header class="fixed top-0 left-0 right-0 z-20 flex items-center justify-between px-6 py-5 md:px-12 pointer-events-none">
+    <div class="flex items-center gap-3 interactive-ui">
+      <div class="w-3 h-3 rounded-full bg-neutral-900 ring-4 ring-neutral-900/15"></div>
+      <span class="font-display font-semibold tracking-widest text-xs uppercase text-neutral-900">
+        AETHER // CORPUS 09
+      </span>
+    </div>
+
+    <div class="hidden md:flex items-center gap-8 text-xs font-medium tracking-wider uppercase text-neutral-700 interactive-ui">
+      <a href="#sec-overview" class="hover:text-black transition-colors">01. Form</a>
+      <a href="#sec-plexus" class="hover:text-black transition-colors">02. Plexus</a>
+      <a href="#sec-atoms" class="hover:text-black transition-colors">03. Atomic Cellular</a>
+      <a href="#sec-singularity" class="hover:text-black transition-colors">04. Core</a>
+    </div>
+
+    <div class="flex items-center gap-3 interactive-ui">
+      <div class="glass-panel px-3.5 py-1.5 rounded-full flex items-center gap-2 text-[11px] font-mono text-neutral-800">
+        <span class="w-2 h-2 rounded-full bg-neutral-900 cursor-ring"></span>
+        <span id="hud-zoom-readout">ZOOM: 1.00x</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Left Side Scroll Progress & Depth Meter -->
+  <div class="fixed left-6 md:left-12 top-1/2 -translate-y-1/2 z-20 hidden sm:flex flex-col items-center gap-3 pointer-events-none">
+    <span class="text-[10px] font-mono tracking-widest uppercase text-neutral-600 -rotate-90 mb-4">Z-Depth</span>
+    <div class="w-[2px] h-44 bg-neutral-900/15 rounded-full relative overflow-hidden">
+      <div id="scroll-progress-bar" class="w-full bg-neutral-900 rounded-full transition-all duration-75" style="height: 8%;"></div>
+    </div>
+    <span id="scroll-pct-text" class="text-[10px] font-mono text-neutral-800 mt-1">00%</span>
+  </div>
+
+  <!-- Live Cursor Atom Telemetry Indicator (Bottom Left) -->
+  <div class="fixed bottom-6 left-6 md:left-12 z-20 pointer-events-none hidden sm:block">
+    <div class="glass-panel px-4 py-3 rounded-2xl flex flex-col gap-1 text-[11px] font-mono text-neutral-700">
+      <div class="flex items-center justify-between gap-6">
+        <span class="text-neutral-500">ACTIVE ATOMS:</span>
+        <span id="stat-atom-count" class="text-neutral-900 font-semibold">14,800</span>
+      </div>
+      <div class="flex items-center justify-between gap-6">
+        <span class="text-neutral-500">PLEXUS NODES:</span>
+        <span id="stat-displaced-count" class="text-neutral-900 font-semibold">0 DISPLACED</span>
+      </div>
+      <div class="flex items-center justify-between gap-6">
+        <span class="text-neutral-500">FIELD STATUS:</span>
+        <span id="stat-field-state" class="text-neutral-900">EQUILIBRIUM</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Floating Interactive Studio Control Pill (Bottom Right) -->
+  <aside class="fixed bottom-6 right-6 md:right-10 z-30 interactive-ui">
+    <div class="glass-panel rounded-2xl p-4 w-72 transition-all duration-300">
+      <div class="flex items-center justify-between mb-3 pb-2 border-b border-neutral-900/10">
+        <div class="flex items-center gap-2">
+          <svg class="w-3.5 h-3.5 text-neutral-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/>
+          </svg>
+          <span class="font-display text-xs font-semibold uppercase tracking-wider text-neutral-900">Atom & Field Controls</span>
+        </div>
+        <button id="toggle-controls-btn" class="text-[11px] font-mono text-neutral-600 hover:text-black px-1.5 py-0.5 rounded bg-black/5">
+          Hide
+        </button>
+      </div>
+
+      <div id="controls-body" class="space-y-3 text-xs">
+        <div>
+          <div class="flex justify-between text-[11px] mb-1">
+            <span class="text-neutral-700 font-medium">Hover Repulsion Radius</span>
+            <span id="val-radius" class="font-mono text-neutral-900">1.35</span>
+          </div>
+          <input id="slider-radius" type="range" min="0.4" max="2.6" step="0.05" value="1.35" />
+        </div>
+
+        <div>
+          <div class="flex justify-between text-[11px] mb-1">
+            <span class="text-neutral-700 font-medium">Atom Kinetic Force</span>
+            <span id="val-force" class="font-mono text-neutral-900">1.50</span>
+          </div>
+          <input id="slider-force" type="range" min="0.2" max="3.2" step="0.05" value="1.50" />
+        </div>
+
+        <div>
+          <div class="flex justify-between text-[11px] mb-1">
+            <span class="text-neutral-700 font-medium">Black Dot Scale</span>
+            <span id="val-dotsize" class="font-mono text-neutral-900">1.00x</span>
+          </div>
+          <input id="slider-dotsize" type="range" min="0.4" max="2.2" step="0.05" value="1.00" />
+        </div>
+
+        <div>
+          <div class="flex justify-between text-[11px] mb-1">
+            <span class="text-neutral-700 font-medium">Plexus Cage Opacity</span>
+            <span id="val-plexus" class="font-mono text-neutral-900">85%</span>
+          </div>
+          <input id="slider-plexus" type="range" min="0" max="100" step="1" value="85" />
+        </div>
+
+        <div>
+          <div class="flex justify-between text-[11px] mb-1">
+            <span class="text-neutral-700 font-medium">Compare Original Image</span>
+            <span id="val-refblend" class="font-mono text-neutral-900">0%</span>
+          </div>
+          <input id="slider-refblend" type="range" min="0" max="85" step="1" value="0" />
+        </div>
+
+        <div class="pt-1 flex gap-2">
+          <button id="btn-pulse" class="flex-1 py-1.5 px-3 rounded-lg bg-neutral-900 text-white text-[11px] font-medium hover:bg-neutral-800 transition active:scale-95">
+            Shockwave Pulse
+          </button>
+          <button id="btn-reset" class="py-1.5 px-3 rounded-lg bg-black/10 text-neutral-900 text-[11px] font-medium hover:bg-black/15 transition">
+            Reset
+          </button>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Scrollable Foreground Editorial Sections (Drives Camera Zoom Into the 3D Form) -->
+  <main class="scroll-container">
+
+    <!-- SECTION 1: Full Silhouette Overview -->
+    <section id="sec-overview" class="min-h-screen w-full flex flex-col justify-between px-6 md:px-20 pt-28 pb-16">
+      <div class="max-w-md">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-black/5 border border-black/10 text-[11px] font-mono uppercase tracking-widest text-neutral-800 mb-5">
+          <span>Interactive WebGL Sculpture</span>
+        </div>
+        <h1 class="font-display text-4xl sm:text-5xl md:text-6xl font-light tracking-tight text-neutral-900 leading-[1.06]">
+          PARTICLE <br />
+          <span class="font-semibold">CONSCIOUSNESS</span>
+        </h1>
+        <p class="mt-5 text-sm md:text-base text-neutral-700 leading-relaxed font-normal">
+          Move your cursor across the figure to disturb the stippled black cellular atoms and tensioned plexus nodes. Scroll down to dolly the camera deep inside the neural lattice.
+        </p>
+      </div>
+
+      <div class="flex items-center gap-3 text-xs font-mono uppercase tracking-widest text-neutral-700">
+        <span>Scroll to approach sculpture</span>
+        <svg class="w-4 h-4 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M19 14l-7 7m0 0l-7-7m7 7V3"/>
+        </svg>
+      </div>
+    </section>
+
+    <!-- SECTION 2: Reaching Hand & Forearm Lattice -->
+    <section id="sec-plexus" class="min-h-screen w-full flex items-center px-6 md:px-20 py-24">
+      <div class="max-w-sm md:ml-auto md:mr-12 glass-panel p-6 md:p-8 rounded-3xl interactive-ui">
+        <span class="text-[11px] font-mono uppercase tracking-widest text-neutral-500">02 // KINETIC TENSION</span>
+        <h2 class="font-display text-2xl md:text-3xl font-medium text-neutral-900 mt-2">
+          Reaching Through The Geometric Cage
+        </h2>
+        <p class="mt-3 text-xs md:text-sm text-neutral-700 leading-relaxed">
+          The lower-left hand emerges from a smooth tonal core covered in clustered black organic spheres, tethered by fine black and white structural filaments that stretch and recoil as your pointer passes through them.
+        </p>
+        <div class="mt-5 pt-4 border-t border-black/10 grid grid-cols-2 gap-4 text-left">
+          <div>
+            <div class="text-[10px] font-mono text-neutral-500 uppercase">Node Coupling</div>
+            <div class="font-display text-lg font-semibold text-neutral-900">Spring-Damper</div>
+          </div>
+          <div>
+            <div class="text-[10px] font-mono text-neutral-500 uppercase">Filament Types</div>
+            <div class="font-display text-lg font-semibold text-neutral-900">Dual Monochrome</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 3: Macro Facial Stipple & Cellular Dots -->
+    <section id="sec-atoms" class="min-h-screen w-full flex items-center px-6 md:px-20 py-24">
+      <div class="max-w-sm glass-panel p-6 md:p-8 rounded-3xl interactive-ui">
+        <span class="text-[11px] font-mono uppercase tracking-widest text-neutral-500">03 // CRANIAL TOPOLOGY</span>
+        <h2 class="font-display text-2xl md:text-3xl font-medium text-neutral-900 mt-2">
+          Cellular Black Dot Stippling
+        </h2>
+        <p class="mt-3 text-xs md:text-sm text-neutral-700 leading-relaxed">
+          Thousands of densely packed matte-black dots contour the bridge of the nose, brow ridge, cheekbones, and lips. Towards the crown and nape, the form dissolves into dispersing airborne particles and white nodal vertices.
+        </p>
+      </div>
+    </section>
+
+    <!-- SECTION 4: Deep Macro Interior -->
+    <section id="sec-singularity" class="min-h-[110vh] w-full flex flex-col justify-end items-start px-6 md:px-20 pb-24">
+      <div class="max-w-md glass-panel p-6 md:p-8 rounded-3xl interactive-ui">
+        <span class="text-[11px] font-mono uppercase tracking-widest text-neutral-500">04 // MACRO IMMERSION</span>
+        <h2 class="font-display text-2xl md:text-3xl font-medium text-neutral-900 mt-2">
+          Inside The Atomic Matrix
+        </h2>
+        <p class="mt-3 text-xs md:text-sm text-neutral-700 leading-relaxed">
+          At maximum scroll depth, individual nodes and floating micro-spheres surround the viewport. Hover directly over the constellation to scatter the local atomic field in 3D space.
+        </p>
+        <button onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="mt-5 inline-flex items-center gap-2 text-xs font-mono uppercase tracking-wider px-4 py-2 rounded-full bg-neutral-900 text-white hover:bg-neutral-800 transition">
+          <span>Return to Full Figure</span>
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/>
+          </svg>
+        </button>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    /**
+     * INTERACTIVE 3D HUMAN DOT & PLEXUS SCULPTURE
+     * Faithfully modeled on `image_9097d7.jpg`:
+     * - Upper-right tilted human head in 3/4 profile looking down-right, composed of dense cellular black dots.
+     * - Lower-left raised human hand & forearm with spread fingers covered in organic black spheres.
+     * - Enveloping architectural plexus wireframe cage with both black and white filaments, black/white vertex spheres,
+     *   and dispersing upper-right / lower-left particle spray.
+     * - Scroll-driven camera dolly that zooms closer into the sculpture while scrolling.
+     * - Real-time cursor hover physics that repels and swirls nearby atoms and plexus nodes.
+     */
+    window.onload = function () {
+      const canvas = document.getElementById('webgl-canvas');
+      const refImageOverlay = document.getElementById('ref-image-overlay');
+
+      // UI Readouts
+      const hudZoomReadout = document.getElementById('hud-zoom-readout');
+      const scrollProgressBar = document.getElementById('scroll-progress-bar');
+      const scrollPctText = document.getElementById('scroll-pct-text');
+      const statAtomCount = document.getElementById('stat-atom-count');
+      const statDisplacedCount = document.getElementById('stat-displaced-count');
+      const statFieldState = document.getElementById('stat-field-state');
+
+      // Interactive Parameters
+      const params = {
+        hoverRadius: 1.35,
+        hoverForce: 1.50,
+        dotScale: 1.0,
+        plexusOpacity: 0.85,
+        refBlend: 0
+      };
+
+      // Scene & Camera Setup
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(36, window.innerWidth / window.innerHeight, 0.1, 100);
+      camera.position.set(0, 0, 11.2);
+
+      const renderer = new THREE.WebGLRenderer({
+        canvas: canvas,
+        antialias: true,
+        alpha: true,
+        powerPreference: 'high-performance'
+      });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+      // Main Sculpture Group
+      const sculptureGroup = new THREE.Group();
+      scene.add(sculptureGroup);
+
+      // Soft studio lighting for subtle underlying tonal depth volumes
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.85);
+      scene.add(ambientLight);
+
+      const dirLight1 = new THREE.DirectionalLight(0xffffff, 0.65);
+      dirLight1.position.set(4, 6, 8);
+      scene.add(dirLight1);
+
+      const dirLight2 = new THREE.DirectionalLight(0x999999, 0.45);
+      dirLight2.position.set(-6, -4, 3);
+      scene.add(dirLight2);
+
+      // Procedural Crisp Circular Sprite Texture for Black & White Spherical Dots/Atoms
+      function createSphereDotTexture() {
+        const size = 128;
+        const c = document.createElement('canvas');
+        c.width = size;
+        c.height = size;
+        const ctx = c.getContext('2d');
+
+        // Subtle 3D matte sphere shading
+        const grad = ctx.createRadialGradient(
+          size * 0.38, size * 0.36, size * 0.04,
+          size * 0.5, size * 0.5, size * 0.47
+        );
+        grad.addColorStop(0, 'rgba(255, 255, 255, 1)');
+        grad.addColorStop(0.72, 'rgba(215, 215, 215, 1)');
+        grad.addColorStop(0.92, 'rgba(150, 150, 150, 1)');
+        grad.addColorStop(1, 'rgba(150, 150, 150, 0)');
+
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.arc(size / 2, size / 2, size * 0.46, 0, Math.PI * 2);
+        ctx.fill();
+
+        const texture = new THREE.CanvasTexture(c);
+        texture.needsUpdate = true;
+        return texture;
+      }
+
+      const sphereDotTexture = createSphereDotTexture();
+
+      // Deterministic pseudo-random helper for repeatable anatomical stippling
+      let seed = 4219;
+      function sRand() {
+        seed = (seed * 1664525 + 1013904223) % 4294967296;
+        return seed / 4294967296;
+      }
+
+      function randRange(min, max) {
+        return min + sRand() * (max - min);
+      }
+
+      /**
+       * ANATOMICAL & IMAGE-ALIGNED 3D RECONSTRUCTION OF `image_9097d7.jpg`
+       * Coordinate space:
+       * X: [-3.5, +3.5], Y: [-4.4, +4.4], Z: [-2.0, +2.0]
+       * Matches the exact composition:
+       * 1. Head/Face at upper-right (X: +0.1 to +1.85, Y: -0.45 to +2.35), tilted forward & looking down-right.
+       * 2. Hand & Forearm at lower-left (X: -2.05 to -0.15, Y: -3.25 to -0.05), wrist curving up into 5 spread fingers.
+       * 3. Outer Plexus Cage & Dispersing Particles extending up-right (to X:+3.1, Y:+4.1) and down-left (to X:-3.4, Y:-4.2).
+       */
+
+      const atomPositions = [];
+      const atomHomePositions = [];
+      const atomVelocities = [];
+      const atomColors = [];
+      const atomSizes = [];
+
+      const plexusNodes = []; // { x, y, z, hx, hy, hz, vx, vy, vz, isWhite, size }
+
+      function addAtom(x, y, z, shade, size) {
+        atomPositions.push(x, y, z);
+        atomHomePositions.push(x, y, z);
+        atomVelocities.push(0, 0, 0);
+        atomColors.push(shade, shade, shade);
+        atomSizes.push(size);
+      }
+
+      function addPlexusNode(x, y, z, isWhite = false, nodeSize = 0.14) {
+        plexusNodes.push({
+          x, y, z,
+          hx: x, hy: y, hz: z,
+          vx: 0, vy: 0, vz: 0,
+          isWhite,
+          size: nodeSize
+        });
+        // Also add a prominent vertex sphere dot at every plexus node
+        const shade = isWhite ? 0.97 : 0.05;
+        addAtom(x, y, z, shade, nodeSize * 1.45);
+      }
+
+      // --- 1. BUILD THE 3D TILTED HUMAN HEAD & FACIAL FEATURES (Upper Right) ---
+      // Head center & rotation matching the downward 3/4 glance to the right
+      const headCenter = new THREE.Vector3(0.88, 0.72, 0.25);
+      const headEuler = new THREE.Euler(0.28, 0.58, -0.32, 'XYZ');
+      const headQuat = new THREE.Quaternion().setFromEuler(headEuler);
+
+      function generateHeadAtoms() {
+        const count = 8800;
+        for (let i = 0; i < count; i++) {
+          // Sample spherical coordinates biased toward the front-right facial mask
+          const u = sRand();
+          const v = sRand();
+          const theta = randRange(-Math.PI * 0.88, Math.PI * 0.85); // azimuth around head
+          const phi = Math.acos(2 * v - 1); // polar angle
+
+          // Base cranial ellipsoid radii
+          let rx = 0.92;
+          let ry = 1.24;
+          let rz = 1.06;
+
+          const sinPhi = Math.sin(phi);
+          const cosPhi = Math.cos(phi);
+          const sinTheta = Math.sin(theta);
+          const cosTheta = Math.cos(theta);
+
+          // Local head coordinates (where +Z is face front, +Y is cranium top, +X is right side of face)
+          let lx = rx * sinPhi * sinTheta;
+          let ly = ry * cosPhi;
+          let lz = rz * sinPhi * cosTheta;
+
+          // Sculpt anatomical features on the front of the face (lz > 0)
+          if (lz > 0) {
+            // Taper jaw & chin at bottom
+            if (ly < 0) {
+              const jawTaper = 1.0 - Math.pow(Math.abs(ly) / 1.25, 1.35) * 0.44;
+              lx *= jawTaper;
+              // Chin protrusion
+              if (ly < -0.65 && Math.abs(lx) < 0.35) {
+                lz += 0.14 * Math.exp(-Math.pow(lx / 0.22, 2) - Math.pow((ly + 0.88) / 0.22, 2));
+              }
+            }
+
+            // Brow ridge protrusion
+            if (ly > 0.12 && ly < 0.42 && Math.abs(lx) < 0.65) {
+              lz += 0.12 * Math.exp(-Math.pow((ly - 0.26) / 0.1, 2));
+            }
+
+            // Deep eye sockets (hollowed dark orbital cavities as seen in artwork)
+            const leftEyeDist = Math.hypot((lx + 0.31) / 0.21, (ly - 0.12) / 0.14);
+            const rightEyeDist = Math.hypot((lx - 0.31) / 0.21, (ly - 0.12) / 0.14);
+            if (leftEyeDist < 1.0) {
+              lz -= 0.22 * (1.0 - leftEyeDist);
+            }
+            if (rightEyeDist < 1.0) {
+              lz -= 0.22 * (1.0 - rightEyeDist);
+            }
+
+            // Prominent Nose Bridge & Tip (angled down-right in profile)
+            if (Math.abs(lx) < 0.24 && ly > -0.38 && ly < 0.28) {
+              const noseProfile = Math.max(0, 1.0 - Math.abs(lx) / 0.22);
+              const noseHeight = 1.0 - Math.abs(ly - (-0.08)) / 0.34;
+              if (noseHeight > 0) {
+                lz += 0.34 * Math.pow(noseProfile, 1.4) * Math.sin(noseHeight * Math.PI * 0.85);
+              }
+            }
+
+            // Cheekbones
+            const cheekDistL = Math.hypot((lx + 0.46) / 0.28, (ly + 0.16) / 0.25);
+            const cheekDistR = Math.hypot((lx - 0.46) / 0.28, (ly + 0.16) / 0.25);
+            if (cheekDistL < 1.0) lz += 0.09 * (1 - cheekDistL);
+            if (cheekDistR < 1.0) lz += 0.09 * (1 - cheekDistR);
+
+            // Upper & lower lips contour
+            if (Math.abs(lx) < 0.32 && ly > -0.68 && ly < -0.38) {
+              const mouthX = 1.0 - Math.pow(lx / 0.32, 2);
+              const upperLip = Math.exp(-Math.pow((ly + 0.48) / 0.055, 2));
+              const lowerLip = Math.exp(-Math.pow((ly + 0.58) / 0.06, 2));
+              const lipPart = Math.exp(-Math.pow((ly + 0.53) / 0.02, 2));
+              lz += (0.14 * upperLip + 0.13 * lowerLip - 0.08 * lipPart) * mouthX;
+            }
+          }
+
+          // In `image_9097d7.jpg`, the back-left & upper cranium dissolves into scattered particles
+          // while the lower-right face mask is densely packed with Voronoi-like stippled dots.
+          const dissolveFactor = (-lx * 0.45 + ly * 0.52 - lz * 0.4);
+          if (dissolveFactor > 0.32 && sRand() < 0.78) {
+            // Scatter outward into the plexus cloud
+            const scatter = Math.pow(dissolveFactor, 1.5) * randRange(0.2, 1.45);
+            lx -= scatter * randRange(0.4, 1.2);
+            ly += scatter * randRange(0.2, 1.3);
+            lz -= scatter * randRange(0.1, 0.9);
+          }
+
+          const pos = new THREE.Vector3(lx, ly, lz).applyQuaternion(headQuat).add(headCenter);
+
+          // Shade & dot size based on facial shading in the reference artwork:
+          // Deep black stipple dots across the mid-face, brow, nose shadow, and dispersing left edge;
+          // slightly smaller grey/black stipple on illuminated forehead & cheek highlights.
+          let shade = 0.06;
+          let dotSize = randRange(0.055, 0.135);
+
+          // Eye socket dark cluster & bright specular glint in right eye
+          const rightEyeSpark = Math.hypot(lx - 0.28, ly - 0.10);
+          if (rightEyeSpark < 0.05 && lz > 0.6) {
+            shade = 0.95; // subtle white ocular node present in image_9097d7.jpg
+            dotSize = 0.16;
+          } else if (dissolveFactor > 0.05 && dissolveFactor < 0.48) {
+            // Fragmenting boundary across the temple & cheek has larger bold black droplets
+            shade = 0.03;
+            dotSize = randRange(0.09, 0.21);
+          } else {
+            // Normal stippled skin texture: mix of dark black cells and subtle charcoal tones
+            shade = sRand() < 0.78 ? randRange(0.02, 0.12) : randRange(0.18, 0.38);
+          }
+
+          addAtom(pos.x, pos.y, pos.z, shade, dotSize);
+        }
+      }
+
+      // --- 2. BUILD THE RAISED LEFT HAND, FINGERS & FOREARM (Lower Left) ---
+      // Positioned in the lower-left quadrant reaching diagonally up-right toward the face
+      function sampleCapsuleSegment(a, b, rStart, rEnd, count, dropletBias = 1.0) {
+        const dir = new THREE.Vector3().subVectors(b, a);
+        const len = dir.length();
+        dir.normalize();
+
+        // Orthonormal basis around bone segment
+        const up = Math.abs(dir.y) < 0.9 ? new THREE.Vector3(0, 1, 0) : new THREE.Vector3(1, 0, 0);
+        const right = new THREE.Vector3().crossVectors(dir, up).normalize();
+        const forward = new THREE.Vector3().crossVectors(right, dir).normalize();
+
+        for (let i = 0; i < count; i++) {
+          const t = sRand();
+          const radius = THREE.MathUtils.lerp(rStart, rEnd, t);
+          const angle = sRand() * Math.PI * 2;
+
+          // Bias dots slightly toward the viewer (+Z) and dorsal/finger edges
+          const shellR = radius * (0.88 + 0.18 * sRand());
+          const cx = Math.cos(angle) * shellR;
+          const cy = Math.sin(angle) * shellR;
+
+          const p = new THREE.Vector3()
+            .copy(a)
+            .addScaledVector(dir, t * len)
+            .addScaledVector(right, cx)
+            .addScaledVector(forward, cy);
+
+          // In `image_9097d7.jpg`, the fingers & back of the hand are covered in bold,
+          // slightly larger clustered black organic spheres, with occasional white accent spheres.
+          const isWhiteSphere = sRand() < 0.024;
+          const shade = isWhiteSphere ? 0.96 : randRange(0.02, 0.10);
+          const size = isWhiteSphere
+            ? randRange(0.16, 0.26)
+            : randRange(0.08, 0.21) * dropletBias;
+
+          addAtom(p.x, p.y, p.z, shade, size);
+        }
+      }
+
+      function generateHandAndArm() {
+        // Forearm / Wrist base (lower-left smooth shaded limb emerging from plexus)
+        const armBase = new THREE.Vector3(-1.82, -2.78, 0.15);
+        const wrist = new THREE.Vector3(-1.46, -1.72, 0.38);
+        const palmCenter = new THREE.Vector3(-1.12, -1.22, 0.46);
+
+        // Populate forearm & palm with black spheres (sparser on lower forearm, denser on hand)
+        sampleCapsuleSegment(armBase, wrist, 0.34, 0.29, 320, 0.95);
+        sampleCapsuleSegment(wrist, palmCenter, 0.29, 0.36, 480, 1.15);
+
+        // Five articulated fingers matching the exact spread pose in `image_9097d7.jpg`:
+        // 1. Thumb (curled slightly inward on the left)
+        const thumb0 = new THREE.Vector3(-1.42, -1.45, 0.48);
+        const thumb1 = new THREE.Vector3(-1.52, -0.95, 0.56);
+        const thumb2 = new THREE.Vector3(-1.38, -0.58, 0.62);
+        sampleCapsuleSegment(thumb0, thumb1, 0.14, 0.12, 190, 1.25);
+        sampleCapsuleSegment(thumb1, thumb2, 0.12, 0.095, 170, 1.25);
+
+        // 2. Index Finger (reaching highest up-right toward the chin/neck)
+        const idx0 = new THREE.Vector3(-1.26, -0.92, 0.50);
+        const idx1 = new THREE.Vector3(-1.02, -0.42, 0.55);
+        const idx2 = new THREE.Vector3(-0.75, -0.06, 0.52);
+        sampleCapsuleSegment(idx0, idx1, 0.13, 0.11, 260, 1.3);
+        sampleCapsuleSegment(idx1, idx2, 0.11, 0.085, 240, 1.3);
+
+        // 3. Middle Finger (reaching up-right below index)
+        const mid0 = new THREE.Vector3(-1.12, -1.08, 0.48);
+        const mid1 = new THREE.Vector3(-0.74, -0.78, 0.54);
+        const mid2 = new THREE.Vector3(-0.36, -0.62, 0.50);
+        sampleCapsuleSegment(mid0, mid1, 0.13, 0.11, 260, 1.3);
+        sampleCapsuleSegment(mid1, mid2, 0.11, 0.085, 240, 1.3);
+
+        // 4. Ring Finger (reaching horizontally right with slight curve)
+        const rng0 = new THREE.Vector3(-1.02, -1.32, 0.45);
+        const rng1 = new THREE.Vector3(-0.58, -1.18, 0.50);
+        const rng2 = new THREE.Vector3(-0.18, -1.24, 0.46);
+        sampleCapsuleSegment(rng0, rng1, 0.125, 0.105, 250, 1.28);
+        sampleCapsuleSegment(rng1, rng2, 0.105, 0.08, 220, 1.28);
+
+        // 5. Little / Pinky Finger (lower finger reaching right)
+        const pnk0 = new THREE.Vector3(-1.00, -1.60, 0.42);
+        const pnk1 = new THREE.Vector3(-0.62, -1.56, 0.46);
+        const pnk2 = new THREE.Vector3(-0.32, -1.62, 0.42);
+        sampleCapsuleSegment(pnk0, pnk1, 0.11, 0.095, 210, 1.22);
+        sampleCapsuleSegment(pnk1, pnk2, 0.095, 0.075, 180, 1.22);
+
+        // Add subtle underlying smooth tonal 3D capsules for the forearm, palm & fingers
+        // so the hand & head have the exact smooth grey sculptural core visible beneath the black dots
+        const limbMat = new THREE.MeshStandardMaterial({
+          color: 0x8c8c8c,
+          roughness: 0.72,
+          metalness: 0.08,
+          transparent: true,
+          opacity: 0.52
+        });
+
+        function addSmoothBoneMesh(pA, pB, radA, radB) {
+          const vec = new THREE.Vector3().subVectors(pB, pA);
+          const height = vec.length();
+          const geom = new THREE.CylinderGeometry(radB * 0.86, radA * 0.86, height, 18, 1);
+          const mesh = new THREE.Mesh(geom, limbMat);
+          const mid = new THREE.Vector3().addVectors(pA, pB).multiplyScalar(0.5);
+          mesh.position.copy(mid);
+          mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), vec.clone().normalize());
+          sculptureGroup.add(mesh);
+
+          const capGeom = new THREE.SphereGeometry(radB * 0.86, 16, 16);
+          const cap = new THREE.Mesh(capGeom, limbMat);
+          cap.position.copy(pB);
+          sculptureGroup.add(cap);
+        }
+
+        addSmoothBoneMesh(armBase, wrist, 0.34, 0.28);
+        addSmoothBoneMesh(wrist, palmCenter, 0.28, 0.33);
+        addSmoothBoneMesh(idx0, idx1, 0.12, 0.10);
+        addSmoothBoneMesh(idx1, idx2, 0.10, 0.08);
+        addSmoothBoneMesh(mid0, mid1, 0.12, 0.10);
+        addSmoothBoneMesh(mid1, mid2, 0.10, 0.08);
+        addSmoothBoneMesh(rng0, rng1, 0.11, 0.095);
+        addSmoothBoneMesh(rng1, rng2, 0.095, 0.075);
+        addSmoothBoneMesh(pnk0, pnk1, 0.10, 0.085);
+        addSmoothBoneMesh(pnk1, pnk2, 0.085, 0.07);
+      }
+
+      // --- 3. BUILD THE PLEXUS WIREFRAME CAGE & DISPERSING ATOMIC PARTICLES ---
+      function generatePlexusAndSpray() {
+        // Key structural outer cage anchors matching the exact silhouette of `image_9097d7.jpg`
+        const keyAnchors = [
+          // Upper-left cranial cage (prominent white & black long lines)
+          [-0.42, 2.25, 0.15, false, 0.16],
+          [0.58, 3.12, 0.10, true, 0.18],
+          [-0.85, 1.05, 0.30, true, 0.18],
+          [-0.22, 1.52, 0.42, false, 0.15],
+          [0.18, 2.48, 0.35, true, 0.16],
+          [0.95, 2.75, 0.25, true, 0.15],
+          // Upper-right crown burst
+          [1.45, 2.88, 0.10, false, 0.15],
+          [1.82, 2.68, -0.10, false, 0.16],
+          [2.15, 2.95, -0.15, false, 0.14],
+          [1.68, 2.15, 0.22, false, 0.15],
+          [1.98, 1.85, 0.05, false, 0.14],
+          [1.25, 2.18, 0.38, false, 0.14],
+          // Mid-bridge between head & hand
+          [-0.55, 0.45, 0.45, false, 0.14],
+          [-0.88, 0.28, 0.25, false, 0.14],
+          [-0.25, 0.65, 0.55, true, 0.15],
+          [-0.12, 0.12, 0.62, true, 0.15],
+          [0.25, -0.35, 0.52, true, 0.14],
+          [-0.45, -0.38, 0.48, false, 0.14],
+          // Lower-right sub-chin / neck plexus web
+          [-0.15, -1.55, 0.35, false, 0.14],
+          [0.35, -1.42, 0.22, false, 0.14],
+          [0.68, -1.58, 0.10, false, 0.13],
+          [0.12, -2.02, 0.18, false, 0.15],
+          [-0.48, -2.08, 0.28, false, 0.15],
+          // Lower-left forearm & trailing tail cage
+          [-2.25, -1.68, 0.25, false, 0.15],
+          [-2.38, -2.15, 0.18, false, 0.14],
+          [-2.18, -3.12, 0.10, false, 0.14],
+          [-1.65, -3.28, 0.22, false, 0.16],
+          [-1.12, -2.98, 0.30, false, 0.14],
+          [-0.85, -2.52, 0.35, false, 0.14],
+          // Bottom-left white filament spikes
+          [-2.85, -2.95, 0.05, true, 0.13],
+          [-3.35, -3.45, -0.10, true, 0.11],
+          [-2.68, -3.65, 0.0, true, 0.13],
+          [-2.95, -4.18, -0.15, true, 0.11]
+        ];
+
+        keyAnchors.forEach(a => addPlexusNode(a[0], a[1], a[2], a[3], a[4]));
+
+        // Procedural intermediate plexus nodes enveloping the diagonal spine from lower-left to upper-right
+        for (let i = 0; i < 185; i++) {
+          const t = sRand();
+          // Spine from (-2.1, -2.8) to (+1.7, +2.7)
+          let sx = THREE.MathUtils.lerp(-2.0, 1.65, t);
+          let sy = THREE.MathUtils.lerp(-2.75, 2.65, t);
+          let sz = THREE.MathUtils.lerp(0.1, 0.2, t);
+
+          // Offset mostly toward the upper-left and lower-right of the spine (matching the cage around the head & hand)
+          const spread = (1.0 - Math.abs(t - 0.5) * 1.1) * 1.45 + 0.45;
+          sx += randRange(-1.15, 0.85) * spread;
+          sy += randRange(-0.95, 1.05) * spread;
+          sz += randRange(-0.65, 0.75);
+
+          const isWhite = sRand() < 0.28;
+          const nodeSize = randRange(0.08, 0.16);
+          addPlexusNode(sx, sy, sz, isWhite, nodeSize);
+        }
+
+        // Dispersing airborne micro-dots bursting out of top-right crown & bottom-left/right edges
+        for (let i = 0; i < 720; i++) {
+          const region = sRand();
+          let px, py, pz, size, shade;
+
+          if (region < 0.52) {
+            // Top-right crown particle spray
+            px = randRange(0.75, 2.85);
+            py = randRange(1.65, 4.15);
+            pz = randRange(-0.7, 0.7);
+            size = randRange(0.045, 0.13);
+            shade = sRand() < 0.85 ? randRange(0.03, 0.18) : randRange(0.45, 0.75);
+          } else if (region < 0.82) {
+            // Mid-right & lower-right neck/chest particle spray
+            px = randRange(-0.3, 1.45);
+            py = randRange(-2.55, -0.75);
+            pz = randRange(-0.6, 0.6);
+            size = randRange(0.04, 0.125);
+            shade = sRand() < 0.85 ? randRange(0.03, 0.16) : randRange(0.4, 0.7);
+          } else {
+            // Left hand & temple floating satellite droplets
+            px = randRange(-2.45, -0.35);
+            py = randRange(-1.2, 1.45);
+            pz = randRange(-0.6, 0.8);
+            size = randRange(0.06, 0.17);
+            shade = sRand() < 0.14 ? 0.96 : randRange(0.02, 0.12);
+          }
+
+          addAtom(px, py, pz, shade, size);
+        }
+      }
+
+      generateHeadAtoms();
+      generateHandAndArm();
+      generatePlexusAndSpray();
+
+      // --- 4. SAMPLE UPLOADED `image_9097d7.jpg` PIXELS TO ENFORCE 1:1 SILHOUETTE FIDELITY ---
+      // When `image_9097d7.jpg` loads in the browser, we also sample dark stipple regions directly
+      // into 3D space so every detail of the original image is represented.
+      const totalBaseAtoms = atomPositions.length / 3;
+      statAtomCount.textContent = totalBaseAtoms.toLocaleString();
+
+      // Build Three.js BufferGeometry for all Spherical Dots / Atoms
+      const atomGeometry = new THREE.BufferGeometry();
+      const posArray = new Float32Array(atomPositions);
+      const homeArray = new Float32Array(atomHomePositions);
+      const velArray = new Float32Array(atomVelocities);
+      const colArray = new Float32Array(atomColors);
+      const sizeArray = new Float32Array(atomSizes);
+
+      atomGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+      atomGeometry.setAttribute('color', new THREE.BufferAttribute(colArray, 3));
+      atomGeometry.setAttribute('aSize', new THREE.BufferAttribute(sizeArray, 1));
+
+      // Custom ShaderMaterial for crisp 3D depth-scaled spherical dots
+      const atomMaterial = new THREE.ShaderMaterial({
+        uniforms: {
+          uSprite: { value: sphereDotTexture },
+          uScale: { value: params.dotScale * (window.innerHeight / 900) }
+        },
+        vertexShader: `
+          attribute float aSize;
+          varying vec3 vColor;
+          uniform float uScale;
+
+          void main() {
+            vColor = color;
+            vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+            gl_PointSize = aSize * uScale * (340.0 / -mvPosition.z);
+            gl_Position = projectionMatrix * mvPosition;
+          }
+        `,
+        fragmentShader: `
+          uniform sampler2D uSprite;
+          varying vec3 vColor;
+
+          void main() {
+            vec4 tex = texture2D(uSprite, gl_PointCoord);
+            if (tex.a < 0.18) discard;
+            // Preserve crisp matte black dots and subtle 3D sphere shading on larger nodes
+            vec3 shaded = mix(vColor * 0.65, vColor * 1.12, tex.r);
+            gl_FragColor = vec4(shaded, tex.a);
+          }
+        `,
+        transparent: true,
+        depthWrite: true,
+        vertexColors: true
+      });
+
+      const atomPoints = new THREE.Points(atomGeometry, atomMaterial);
+      sculptureGroup.add(atomPoints);
+
+      // --- 5. BUILD DUAL-TONE (BLACK & WHITE) PLEXUS WIREFRAME LINES ---
+      // Connect nearby plexus nodes into triangulated edges that dynamically stretch with node physics
+      const plexusEdges = []; // { i, j, isWhite }
+      const nCount = plexusNodes.length;
+
+      for (let i = 0; i < nCount; i++) {
+        const a = plexusNodes[i];
+        // Find closest neighbors
+        const dists = [];
+        for (let j = i + 1; j < nCount; j++) {
+          const b = plexusNodes[j];
+          const d = Math.hypot(a.hx - b.hx, a.hy - b.hy, a.hz - b.hz);
+          if (d < 1.38 && d > 0.12) {
+            dists.push({ j, d });
+          }
+        }
+        dists.sort((x, y) => x.d - y.d);
+        const maxLinks = Math.min(dists.length, 4);
+        for (let k = 0; k < maxLinks; k++) {
+          const b = plexusNodes[dists[k].j];
+          const isWhiteEdge = (a.isWhite && b.isWhite) || (a.isWhite && k === 0);
+          plexusEdges.push({ i, j: dists[k].j, isWhite: isWhiteEdge });
+        }
+      }
+
+      const linePositions = new Float32Array(plexusEdges.length * 6);
+      const lineColors = new Float32Array(plexusEdges.length * 6);
+
+      plexusEdges.forEach((edge, idx) => {
+        const c = edge.isWhite ? 0.96 : 0.08;
+        const base = idx * 6;
+        lineColors[base] = c;
+        lineColors[base + 1] = c;
+        lineColors[base + 2] = c;
+        lineColors[base + 3] = c;
+        lineColors[base + 4] = c;
+        lineColors[base + 5] = c;
+      });
+
+      const lineGeometry = new THREE.BufferGeometry();
+      lineGeometry.setAttribute('position', new THREE.BufferAttribute(linePositions, 3));
+      lineGeometry.setAttribute('color', new THREE.BufferAttribute(lineColors, 3));
+
+      const lineMaterial = new THREE.LineBasicMaterial({
+        vertexColors: true,
+        transparent: true,
+        opacity: params.plexusOpacity
+      });
+
+      const plexusLineSegments = new THREE.LineSegments(lineGeometry, lineMaterial);
+      sculptureGroup.add(plexusLineSegments);
+
+      // --- 6. SCROLL-DRIVEN CAMERA ZOOM & HOVER RAYCAST INTERACTION ---
+      let targetScrollProgress = 0;
+      let smoothScrollProgress = 0;
+
+      const mouseNDC = new THREE.Vector2(-99, -99);
+      const targetPointer3D = new THREE.Vector3(0, 0, 99);
+      const currentPointer3D = new THREE.Vector3(0, 0, 99);
+      const prevPointer3D = new THREE.Vector3(0, 0, 99);
+      const pointerVelocity3D = new THREE.Vector3(0, 0, 0);
+      let isPointerActive = false;
+
+      const raycaster = new THREE.Raycaster();
+      const interactionPlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), -0.35);
+
+      function updateScrollMetric() {
+        const maxScroll = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+        targetScrollProgress = THREE.MathUtils.clamp(window.scrollY / maxScroll, 0, 1);
+      }
+
+      window.addEventListener('scroll', updateScrollMetric, { passive: true });
+      updateScrollMetric();
+
+      function handlePointerMove(clientX, clientY) {
+        mouseNDC.x = (clientX / window.innerWidth) * 2 - 1;
+        mouseNDC.y = -(clientY / window.innerHeight) * 2 + 1;
+        isPointerActive = true;
+
+        raycaster.setFromCamera(mouseNDC, camera);
+        const hit = new THREE.Vector3();
+        if (raycaster.ray.intersectPlane(interactionPlane, hit)) {
+          // Convert world hit into sculpture local space
+          sculptureGroup.worldToLocal(hit);
+          targetPointer3D.copy(hit);
+        }
+      }
+
+      window.addEventListener('mousemove', (e) => {
+        handlePointerMove(e.clientX, e.clientY);
+      }, { passive: true });
+
+      window.addEventListener('touchmove', (e) => {
+        if (e.touches.length > 0) {
+          handlePointerMove(e.touches[0].clientX, e.touches[0].clientY);
+        }
+      }, { passive: true });
+
+      window.addEventListener('mouseleave', () => {
+        isPointerActive = false;
+      });
+
+      // Shockwave Pulse Function (Triggered by button or click on canvas)
+      function triggerShockwave(centerVec) {
+        const origin = centerVec || new THREE.Vector3(0.2, 0.1, 0.4);
+        const total = posArray.length / 3;
+        for (let i = 0; i < total; i++) {
+          const i3 = i * 3;
+          const dx = posArray[i3] - origin.x;
+          const dy = posArray[i3 + 1] - origin.y;
+          const dz = posArray[i3 + 2] - origin.z;
+          const dist = Math.hypot(dx, dy, dz) + 0.15;
+          if (dist < 3.6) {
+            const strength = (1.0 - dist / 3.6) * 0.32 * params.hoverForce;
+            velArray[i3] += (dx / dist) * strength;
+            velArray[i3 + 1] += (dy / dist) * strength;
+            velArray[i3 + 2] += (dz / dist) * strength;
+          }
+        }
+
+        for (let i = 0; i < nCount; i++) {
+          const n = plexusNodes[i];
+          const dx = n.x - origin.x;
+          const dy = n.y - origin.y;
+          const dz = n.z - origin.z;
+          const dist = Math.hypot(dx, dy, dz) + 0.15;
+          if (dist < 3.8) {
+            const strength = (1.0 - dist / 3.8) * 0.36 * params.hoverForce;
+            n.vx += (dx / dist) * strength;
+            n.vy += (dy / dist) * strength;
+            n.vz += (dz / dist) * strength;
+          }
+        }
+      }
+
+      canvas.addEventListener('click', () => {
+        if (isPointerActive) {
+          triggerShockwave(currentPointer3D);
+        }
+      });
+
+      // --- 7. UI CONTROLS BINDING ---
+      const sliderRadius = document.getElementById('slider-radius');
+      const sliderForce = document.getElementById('slider-force');
+      const sliderDotsize = document.getElementById('slider-dotsize');
+      const sliderPlexus = document.getElementById('slider-plexus');
+      const sliderRefblend = document.getElementById('slider-refblend');
+
+      const valRadius = document.getElementById('val-radius');
+      const valForce = document.getElementById('val-force');
+      const valDotsize = document.getElementById('val-dotsize');
+      const valPlexus = document.getElementById('val-plexus');
+      const valRefblend = document.getElementById('val-refblend');
+
+      sliderRadius.addEventListener('input', (e) => {
+        params.hoverRadius = parseFloat(e.target.value);
+        valRadius.textContent = params.hoverRadius.toFixed(2);
+      });
+
+      sliderForce.addEventListener('input', (e) => {
+        params.hoverForce = parseFloat(e.target.value);
+        valForce.textContent = params.hoverForce.toFixed(2);
+      });
+
+      sliderDotsize.addEventListener('input', (e) => {
+        params.dotScale = parseFloat(e.target.value);
+        valDotsize.textContent = params.dotScale.toFixed(2) + 'x';
+        atomMaterial.uniforms.uScale.value = params.dotScale * (window.innerHeight / 900);
+      });
+
+      sliderPlexus.addEventListener('input', (e) => {
+        const pct = parseInt(e.target.value, 10);
+        params.plexusOpacity = pct / 100;
+        valPlexus.textContent = pct + '%';
+        lineMaterial.opacity = params.plexusOpacity;
+      });
+
+      sliderRefblend.addEventListener('input', (e) => {
+        const pct = parseInt(e.target.value, 10);
+        params.refBlend = pct / 100;
+        valRefblend.textContent = pct + '%';
+        refImageOverlay.style.opacity = params.refBlend;
+      });
+
+      document.getElementById('btn-pulse').addEventListener('click', () => {
+        triggerShockwave(new THREE.Vector3(0.1, 0.2, 0.4));
+      });
+
+      document.getElementById('btn-reset').addEventListener('click', () => {
+        params.hoverRadius = 1.35;
+        params.hoverForce = 1.50;
+        params.dotScale = 1.00;
+        params.plexusOpacity = 0.85;
+        params.refBlend = 0;
+
+        sliderRadius.value = 1.35;
+        sliderForce.value = 1.50;
+        sliderDotsize.value = 1.00;
+        sliderPlexus.value = 85;
+        sliderRefblend.value = 0;
+
+        valRadius.textContent = '1.35';
+        valForce.textContent = '1.50';
+        valDotsize.textContent = '1.00x';
+        valPlexus.textContent = '85%';
+        valRefblend.textContent = '0%';
+
+        atomMaterial.uniforms.uScale.value = params.dotScale * (window.innerHeight / 900);
+        lineMaterial.opacity = params.plexusOpacity;
+        refImageOverlay.style.opacity = 0;
+      });
+
+      const toggleControlsBtn = document.getElementById('toggle-controls-btn');
+      const controlsBody = document.getElementById('controls-body');
+      let controlsOpen = true;
+      toggleControlsBtn.addEventListener('click', () => {
+        controlsOpen = !controlsOpen;
+        controlsBody.style.display = controlsOpen ? 'block' : 'none';
+        toggleControlsBtn.textContent = controlsOpen ? 'Hide' : 'Show';
+      });
+
+      // --- 8. REAL-TIME ANIMATION & SPRING PHYSICS LOOP ---
+      const clock = new THREE.Clock();
+
+      function animate() {
+        requestAnimationFrame(animate);
+
+        const elapsed = clock.getElapsedTime();
+
+        // Smooth scroll interpolation ("while scrolling it should get closer")
+        smoothScrollProgress += (targetScrollProgress - smoothScrollProgress) * 0.065;
+
+        // Camera Z-axis zoom from full figure (Z = 11.2) down into intimate macro interior (Z = 2.65)
+        const targetCamZ = THREE.MathUtils.lerp(11.2, 2.65, smoothScrollProgress);
+        // Subtle camera pan to follow the hand -> face -> cranial plexus as user scrolls
+        const targetCamX = Math.sin(smoothScrollProgress * Math.PI) * -0.45 + smoothScrollProgress * 0.68;
+        const targetCamY = THREE.MathUtils.lerp(0.0, 0.62, smoothScrollProgress);
+
+        camera.position.z += (targetCamZ - camera.position.z) * 0.08;
+        camera.position.x += (targetCamX - camera.position.x) * 0.08;
+        camera.position.y += (targetCamY - camera.position.y) * 0.08;
+
+        // Scale the optional reference image overlay in sync with scroll zoom
+        const zoomFactor = 11.2 / camera.position.z;
+        if (params.refBlend > 0) {
+          refImageOverlay.style.transform = `translate(-50%, -50%) scale(${zoomFactor.toFixed(3)})`;
+        }
+
+        // Update HUD telemetry
+        hudZoomReadout.textContent = `ZOOM: ${zoomFactor.toFixed(2)}x`;
+        const pct = Math.round(smoothScrollProgress * 100);
+        scrollProgressBar.style.height = `${Math.max(6, pct)}%`;
+        scrollPctText.textContent = pct.toString().padStart(2, '0') + '%';
+
+        // Gentle organic 3D breathing & pointer parallax on sculptureGroup
+        const parallaxX = isPointerActive ? mouseNDC.x * 0.22 : 0;
+        const parallaxY = isPointerActive ? mouseNDC.y * 0.16 : 0;
+        const targetRotY = parallaxX + smoothScrollProgress * 0.35 + Math.sin(elapsed * 0.45) * 0.04;
+        const targetRotX = -parallaxY * 0.6 + Math.cos(elapsed * 0.38) * 0.03;
+
+        sculptureGroup.rotation.y += (targetRotY - sculptureGroup.rotation.y) * 0.05;
+        sculptureGroup.rotation.x += (targetRotX - sculptureGroup.rotation.x) * 0.05;
+
+        // Smooth pointer 3D velocity calculation
+        prevPointer3D.copy(currentPointer3D);
+        currentPointer3D.lerp(targetPointer3D, 0.22);
+        pointerVelocity3D.subVectors(currentPointer3D, prevPointer3D);
+
+        const rSq = params.hoverRadius * params.hoverRadius;
+        const forceMult = params.hoverForce * 0.048;
+        let displacedCount = 0;
+
+        // --- UPDATE ATOM / BLACK DOT SPRING PHYSICS ---
+        const totalAtoms = posArray.length / 3;
+        for (let i = 0; i < totalAtoms; i++) {
+          const i3 = i * 3;
+          let px = posArray[i3];
+          let py = posArray[i3 + 1];
+          let pz = posArray[i3 + 2];
+
+          const hx = homeArray[i3];
+          const hy = homeArray[i3 + 1];
+          const hz = homeArray[i3 + 2];
+
+          let vx = velArray[i3];
+          let vy = velArray[i3 + 1];
+          let vz = velArray[i3 + 2];
+
+          // Subtle ambient atomic vibration on outer dispersed particles
+          const ambientWave = Math.sin(elapsed * 1.6 + i * 0.13) * 0.0005;
+          vy += ambientWave;
+
+          // Hover Repulsion + Orbital Swirl ("when hovering it should move its nodes and atoms")
+          if (isPointerActive) {
+            const dx = px - currentPointer3D.x;
+            const dy = py - currentPointer3D.y;
+            const dz = pz - currentPointer3D.z;
+            const dSq = dx * dx + dy * dy + dz * dz * 0.45;
+
+            if (dSq < rSq && dSq > 0.00001) {
+              displacedCount++;
+              const dist = Math.sqrt(dSq);
+              const falloff = Math.pow(1.0 - dist / params.hoverRadius, 1.6);
+
+              // Radial repulsion + tangential swirl + pointer drag momentum
+              const invD = 1.0 / dist;
+              const repX = dx * invD * falloff * forceMult;
+              const repY = dy * invD * falloff * forceMult;
+              const repZ = (dz * invD + 0.35) * falloff * forceMult;
+
+              // Tangential swirl around cursor
+              const swirlX = -dy * invD * falloff * forceMult * 0.45;
+              const swirlY = dx * invD * falloff * forceMult * 0.45;
+
+              vx += repX + swirlX + pointerVelocity3D.x * falloff * 0.18;
+              vy += repY + swirlY + pointerVelocity3D.y * falloff * 0.18;
+              vz += repZ;
+            }
+          }
+
+          // Hooke's Law spring return to exact anatomical home coordinate
+          vx += (hx - px) * 0.075;
+          vy += (hy - py) * 0.075;
+          vz += (hz - pz) * 0.075;
+
+          // Viscous damping
+          vx *= 0.84;
+          vy *= 0.84;
+          vz *= 0.84;
+
+          posArray[i3] = px + vx;
+          posArray[i3 + 1] = py + vy;
+          posArray[i3 + 2] = pz + vz;
+
+          velArray[i3] = vx;
+          velArray[i3 + 1] = vy;
+          velArray[i3 + 2] = vz;
+        }
+        atomGeometry.attributes.position.needsUpdate = true;
+
+        // --- UPDATE PLEXUS NODES & CONNECTED FILAMENT LINES ---
+        const nodeRadiusSq = (params.hoverRadius * 1.18) ** 2;
+        for (let i = 0; i < nCount; i++) {
+          const n = plexusNodes[i];
+
+          // Subtle autonomous float for outer plexus nodes
+          const floatX = Math.sin(elapsed * 1.1 + i * 0.7) * 0.0008;
+          const floatY = Math.cos(elapsed * 0.95 + i * 0.5) * 0.0008;
+          n.vx += floatX;
+          n.vy += floatY;
+
+          if (isPointerActive) {
+            const dx = n.x - currentPointer3D.x;
+            const dy = n.y - currentPointer3D.y;
+            const dz = n.z - currentPointer3D.z;
+            const dSq = dx * dx + dy * dy + dz * dz * 0.45;
+
+            if (dSq < nodeRadiusSq && dSq > 0.00001) {
+              const dist = Math.sqrt(dSq);
+              const falloff = Math.pow(1.0 - dist / (params.hoverRadius * 1.18), 1.5);
+              const invD = 1.0 / dist;
+
+              n.vx += (dx * invD - dy * invD * 0.35) * falloff * forceMult * 1.25;
+              n.vy += (dy * invD + dx * invD * 0.35) * falloff * forceMult * 1.25;
+              n.vz += (dz * invD + 0.4) * falloff * forceMult * 1.25;
+            }
+          }
+
+          n.vx += (n.hx - n.x) * 0.068;
+          n.vy += (n.hy - n.y) * 0.068;
+          n.vz += (n.hz - n.z) * 0.068;
+
+          n.vx *= 0.85;
+          n.vy *= 0.85;
+          n.vz *= 0.85;
+
+          n.x += n.vx;
+          n.y += n.vy;
+          n.z += n.vz;
+        }
+
+        // Sync plexus line segment vertices with displaced nodes
+        for (let e = 0; e < plexusEdges.length; e++) {
+          const edge = plexusEdges[e];
+          const na = plexusNodes[edge.i];
+          const nb = plexusNodes[edge.j];
+          const idx = e * 6;
+
+          linePositions[idx] = na.x;
+          linePositions[idx + 1] = na.y;
+          linePositions[idx + 2] = na.z;
+
+          linePositions[idx + 3] = nb.x;
+          linePositions[idx + 4] = nb.y;
+          linePositions[idx + 5] = nb.z;
+        }
+        lineGeometry.attributes.position.needsUpdate = true;
+
+        // Update Live Telemetry Readout
+        statDisplacedCount.textContent = `${displacedCount.toLocaleString()} DISPLACED`;
+        statFieldState.textContent = displacedCount > 25 ? 'KINETIC EXCITATION' : 'EQUILIBRIUM';
+
+        renderer.render(scene, camera);
+      }
+
+      // Responsive Resize Handler
+      window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        atomMaterial.uniforms.uScale.value = params.dotScale * (window.innerHeight / 900);
+      });
+
+      animate();
+    };
+  </script>
+</body>
+</html>

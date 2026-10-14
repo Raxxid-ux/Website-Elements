@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Organic Interconnected Nodes Pattern Background</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #ffffff;
+        }
+        #neural-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 0;
+            display: block;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Pure Full-Screen Interconnected Nodes Background -->
+    <canvas id="neural-canvas"></canvas>
+
+    <script>
+        (function () {
+            const canvas = document.getElementById('neural-canvas');
+            const ctx = canvas.getContext('2d');
+
+            // Color Palette: #84D71B (Lime Green), #26D677 (Mint Green), #34ADF1 (Sky Blue)
+            // Weighted so Lime Green and Mint Green are primary (~82% combined), Sky Blue is secondary accent (~18%)
+            const PALETTE = [
+                { hex: '#84D71B', r: 132, g: 215, b: 27 },  // Primary: Lime Green
+                { hex: '#26D677', r: 38,  g: 214, b: 119 }, // Primary: Mint Green
+                { hex: '#34ADF1', r: 52,  g: 173, b: 241 }  // Accent: Sky Blue
+            ];
+
+            const CONFIG = {
+                baseOpacity: 0.14,       // Subtle low resting opacity on white background
+                hoverOpacity: 0.68,      // Soft, diffused peak opacity when hovered (not harsh)
+                hoverRadius: 380,        // Wide, heavily diffused spotlight hover radius
+                globalWakeFactor: 0.08,  // Barely perceptible global awakening
+                pulseSpeed: 2.1,         // Calm, slow breathing glow frequency on hover
+                strandsPerEdge: 2,       // Optimized dual-strand fibrous filaments
+                driftSpeed: 0.16,        // Very gentle ambient organic drift
+                maxHoverShift: 5.5,      // Maximum pixel displacement on hover (subtle & non-distracting)
+                cellSize: 135            // Zoomed-out grid cell size to form a continuous pattern
+            };
+
+            let width = window.innerWidth;
+            let height = window.innerHeight;
+            let dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+            const pointer = {
+                x: -9999,
+                y: -9999,
+                targetX: -9999,
+                targetY: -9999,
+                isActive: false,
+                globalPresence: 0
+            };
+
+            let nodes = [];
+            let edges = [];
+            let nodeSprites = [];
+            let ambientGlowSprite = null;
+
+            /**
+             * Pre-renders crisp node cores and ultra-diffused radial glow halos into offscreen canvases.
+             * Eliminates expensive per-node createRadialGradient() calls during the 60fps render loop.
+             */
+            function buildSprites() {
+                nodeSprites = PALETTE.map((c, idx) => {
+                    const alt = PALETTE[idx === 0 ? 1 : (idx === 1 ? 0 : 1)];
+
+                    // 1. Pre-rendered Soft Diffused Halo Sprite (128x128)
+                    const glowSize = 128;
+                    const glowCanvas = document.createElement('canvas');
+                    glowCanvas.width = glowSize;
+                    glowCanvas.height = glowSize;
+                    const gCtx = glowCanvas.getContext('2d');
+                    const halfG = glowSize / 2;
+
+                    const gGrad = gCtx.createRadialGradient(halfG, halfG, 1, halfG, halfG, halfG);
+                    gGrad.addColorStop(0, `rgba(${c.r}, ${c.g}, ${c.b}, 0.55)`);
+                    gGrad.addColorStop(0.28, `rgba(${alt.r}, ${alt.g}, ${alt.b}, 0.24)`);
+                    gGrad.addColorStop(0.62, `rgba(52, 173, 241, 0.06)`);
+                    gGrad.addColorStop(1, `rgba(52, 173, 241, 0)`);
+
+                    gCtx.fillStyle = gGrad;
+                    gCtx.fillRect(0, 0, glowSize, glowSize);
+
+                    // 2. Pre-rendered Crisp Gradient Node Core Sprite (32x32)
+                    const coreSize = 32;
+                    const coreCanvas = document.createElement('canvas');
+                    coreCanvas.width = coreSize;
+                    coreCanvas.height = coreSize;
+                    const cCtx = coreCanvas.getContext('2d');
+                    const halfC = coreSize / 2;
+
+                    const cGrad = cCtx.createRadialGradient(
+                        halfC - coreSize * 0.1,
+                        halfC - coreSize * 0.1,
+                        coreSize * 0.04,
+                        halfC,
+                        halfC,
+                        halfC * 0.85
+                    );
+                    cGrad.addColorStop(0, `rgba(132, 215, 27, 1)`);
+                    cGrad.addColorStop(0.55, `rgba(${c.r}, ${c.g}, ${c.b}, 0.95)`);
+                    cGrad.addColorStop(0.85, `rgba(${alt.r}, ${alt.g}, ${alt.b}, 0.85)`);
+                    cGrad.addColorStop(1, `rgba(${alt.r}, ${alt.g}, ${alt.b}, 0)`);
+
+                    cCtx.fillStyle = cGrad;
+                    cCtx.beginPath();
+                    cCtx.arc(halfC, halfC, halfC * 0.85, 0, Math.PI * 2);
+                    cCtx.fill();
+
+                    return { glowCanvas, coreCanvas };
+                });
+
+                // 3. Pre-rendered Wide Atmospheric Cursor Mist Sprite (256x256)
+                const ambSize = 256;
+                ambientGlowSprite = document.createElement('canvas');
+                ambientGlowSprite.width = ambSize;
+                ambientGlowSprite.height = ambSize;
+                const aCtx = ambientGlowSprite.getContext('2d');
+                const halfA = ambSize / 2;
+
+                const aGrad = aCtx.createRadialGradient(halfA, halfA, 4, halfA, halfA, halfA);
+                aGrad.addColorStop(0, 'rgba(132, 215, 27, 0.045)');
+                aGrad.addColorStop(0.45, 'rgba(38, 214, 119, 0.025)');
+                aGrad.addColorStop(0.75, 'rgba(52, 173, 241, 0.008)');
+                aGrad.addColorStop(1, 'rgba(52, 173, 241, 0)');
+
+                aCtx.fillStyle = aGrad;
+                aCtx.fillRect(0, 0, ambSize, ambSize);
+            }
+
+            /**
+             * Picks a color index favoring Lime (#84D71B) and Mint (#26D677) as primary,
+             * with #34ADF1 as a complementary gradient accent.
+             */
+            function pickWeightedColorIndex() {
+                const rand = Math.random();
+                if (rand < 0.42) return 0; // 42% Lime Green (#84D71B)
+                if (rand < 0.84) return 1; // 42% Mint Green (#26D677)
+                return 2;                  // 16% Sky Blue (#34ADF1)
+            }
+
+            function createPatternNetwork() {
+                nodes = [];
+                edges = [];
+
+                // Stratified grid + micro-cluster distribution so the zoomed-out view looks like
+                // a cohesive, repeating organic web pattern across the entire white background
+                const cols = Math.max(6, Math.ceil(width / CONFIG.cellSize));
+                const rows = Math.max(5, Math.ceil(height / CONFIG.cellSize));
+                const cellW = width / cols;
+                const cellH = height / rows;
+
+                let idCounter = 0;
+
+                for (let r = 0; r < rows; r++) {
+                    for (let c = 0; c < cols; c++) {
+                        // Each cell gets a mini organic cluster center + satellite nodes
+                        const clusterCenterX = (c + 0.2 + Math.random() * 0.6) * cellW;
+                        const clusterCenterY = (r + 0.2 + Math.random() * 0.6) * cellH;
+
+                        // 3 to 5 nodes per cell for a zoomed-out, intricate pattern density
+                        const nodesInCell = 3 + Math.floor(Math.random() * 3);
+
+                        for (let k = 0; k < nodesInCell; k++) {
+                            const isHub = (k === 0 && Math.random() < 0.65);
+                            const isBokeh = (!isHub && Math.random() < 0.2);
+
+                            const angle = Math.random() * Math.PI * 2;
+                            const spread = (k === 0)
+                                ? Math.random() * 10
+                                : (12 + Math.random() * Math.min(cellW, cellH) * 0.58);
+
+                            const x = clusterCenterX + Math.cos(angle) * spread;
+                            const y = clusterCenterY + Math.sin(angle) * spread;
+
+                            // Zoomed-out smaller node radii so it reads as a fine pattern
+                            const baseRadius = isHub
+                                ? (2.0 + Math.random() * 1.4)
+                                : isBokeh
+                                    ? (1.6 + Math.random() * 2.0)
+                                    : (0.95 + Math.random() * 1.1);
+
+                            const depth = isBokeh
+                                ? (0.35 + Math.random() * 0.3)
+                                : (0.7 + Math.random() * 0.3);
+
+                            const colorIdx = pickWeightedColorIndex();
+                            const altColorIdx = (colorIdx === 0) ? 1 : (colorIdx === 1 ? (Math.random() < 0.7 ? 0 : 2) : 1);
+
+                            nodes.push({
+                                id: idCounter++,
+                                x,
+                                y,
+                                driftX: x,
+                                driftY: y,
+                                originX: x,
+                                originY: y,
+                                offsetX: 0,
+                                offsetY: 0,
+                                vx: (Math.random() - 0.5) * 0.38,
+                                vy: (Math.random() - 0.5) * 0.38,
+                                radius: baseRadius,
+                                depth,
+                                isHub,
+                                isBokeh,
+                                colorIdx,
+                                color: PALETTE[colorIdx],
+                                altColor: PALETTE[altColorIdx],
+                                pulsePhase: Math.random() * Math.PI * 2,
+                                hoverEnergy: 0,
+                                degree: 0
+                            });
+                        }
+                    }
+                }
+
+                // Connect nodes with zoomed-out fibrous Bezier filaments
+                const maxDist = Math.min(cellW, cellH) * 1.15;
+                const hubDist = maxDist * 1.38;
+
+                for (let i = 0; i < nodes.length; i++) {
+                    const n1 = nodes[i];
+                    const candidates = [];
+
+                    for (let j = i + 1; j < nodes.length; j++) {
+                        const n2 = nodes[j];
+                        const dx = n1.x - n2.x;
+                        const dy = n1.y - n2.y;
+                        if (Math.abs(dx) > hubDist || Math.abs(dy) > hubDist) continue;
+
+                        const dist = Math.hypot(dx, dy);
+                        const limit = (n1.isHub || n2.isHub) ? hubDist : maxDist;
+
+                        if (dist < limit) {
+                            candidates.push({ node: n2, dist, limit });
+                        }
+                    }
+
+                    candidates.sort((a, b) => a.dist - b.dist);
+
+                    const maxLinks = n1.isHub ? 7 : 4;
+                    let created = 0;
+
+                    for (let k = 0; k < candidates.length && created < maxLinks; k++) {
+                        const { node: n2, dist, limit } = candidates[k];
+                        if (n2.degree >= (n2.isHub ? 9 : 5)) continue;
+
+                        const prob = Math.pow(1 - dist / limit, 1.25);
+                        if (Math.random() < prob || created < 2) {
+                            const strands = [];
+                            for (let s = 0; s < CONFIG.strandsPerEdge; s++) {
+                                strands.push({
+                                    curveBend: (Math.random() - 0.5) * 16,
+                                    weight: s === 0 ? 1.0 : (0.45 + Math.random() * 0.35),
+                                    phaseOffset: Math.random() * Math.PI * 2
+                                });
+                            }
+
+                            // Precompute blended RGB string for fast non-hovered rendering
+                            const midR = (n1.color.r + n2.color.r + 38) / 3 | 0;
+                            const midG = (n1.color.g + n2.color.g + 214) / 3 | 0;
+                            const midB = (n1.color.b + n2.color.b + 119) / 3 | 0;
+
+                            edges.push({
+                                a: n1,
+                                b: n2,
+                                maxDist: limit,
+                                maxDistSq: (limit * 1.12) * (limit * 1.12),
+                                rgbString: `${midR}, ${midG}, ${midB}`,
+                                strands
+                            });
+
+                            n1.degree++;
+                            n2.degree++;
+                            created++;
+                        }
+                    }
+                }
+            }
+
+            function resizeCanvas() {
+                width = window.innerWidth;
+                height = window.innerHeight;
+                dpr = Math.min(window.devicePixelRatio || 1, 2);
+                canvas.width = width * dpr;
+                canvas.height = height * dpr;
+                ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+                if (nodeSprites.length === 0) {
+                    buildSprites();
+                }
+                createPatternNetwork();
+            }
+
+            function render(timestamp) {
+                const time = timestamp * 0.001;
+                ctx.clearRect(0, 0, width, height);
+
+                // Smoothly damp pointer tracking so cursor movement feels silk-like and unhurried
+                if (pointer.isActive) {
+                    pointer.x += (pointer.targetX - pointer.x) * 0.085;
+                    pointer.y += (pointer.targetY - pointer.y) * 0.085;
+                    pointer.globalPresence += (1 - pointer.globalPresence) * 0.04;
+                } else {
+                    pointer.globalPresence += (0 - pointer.globalPresence) * 0.025;
+                }
+
+                // Draw ultra-diffused atmospheric cursor mist in the background
+                if (pointer.globalPresence > 0.01 && ambientGlowSprite) {
+                    const mistSize = CONFIG.hoverRadius * 2.35;
+                    const mistPulse = 0.88 + 0.12 * Math.sin(time * CONFIG.pulseSpeed);
+                    ctx.globalAlpha = pointer.globalPresence * mistPulse;
+                    ctx.drawImage(
+                        ambientGlowSprite,
+                        pointer.x - mistSize * 0.5,
+                        pointer.y - mistSize * 0.5,
+                        mistSize,
+                        mistSize
+                    );
+                    ctx.globalAlpha = 1;
+                }
+
+                const hoverRadiusSq = CONFIG.hoverRadius * CONFIG.hoverRadius;
+                const invHoverRadius = 1 / CONFIG.hoverRadius;
+
+                // 1. Update node ambient drift, diffused hover energy, and subtle elastic micro-interaction
+                for (let i = 0; i < nodes.length; i++) {
+                    const n = nodes[i];
+
+                    // Gentle ambient drift around home anchor
+                    n.driftX += n.vx * CONFIG.driftSpeed * n.depth;
+                    n.driftY += n.vy * CONFIG.driftSpeed * n.depth;
+
+                    n.vx += (n.originX - n.driftX) * 0.0005;
+                    n.vy += (n.originY - n.driftY) * 0.0005;
+                    n.vx *= 0.992;
+                    n.vy *= 0.992;
+
+                    let targetEnergy = 0;
+                    let targetOffsetX = 0;
+                    let targetOffsetY = 0;
+
+                    if (pointer.isActive || pointer.globalPresence > 0.01) {
+                        const dx = n.driftX - pointer.x;
+                        const dy = n.driftY - pointer.y;
+                        const distSq = dx * dx + dy * dy;
+
+                        if (distSq < hoverRadiusSq) {
+                            const dist = Math.sqrt(distSq);
+                            const norm = 1 - dist * invHoverRadius;
+
+                            // Quintic smoothstep falloff for a wide,feather-soft diffused transition
+                            const diffusedFalloff = norm * norm * norm * (norm * (norm * 6 - 15) + 10);
+                            targetEnergy = diffusedFalloff * pointer.globalPresence;
+
+                            // Very slight, non-distracting elastic micro-displacement (max ~5px)
+                            // Uses a sine bell curve so nodes directly under cursor and at the outer edge stay calm
+                            const subtleBell = Math.sin(norm * Math.PI);
+                            const shiftMag = subtleBell * CONFIG.maxHoverShift * n.depth * pointer.globalPresence;
+                            const invDist = 1 / (dist + 0.001);
+
+                            // Slight radial breathing + gentle tangential swirl so motion is barely noticeable
+                            const radialX = -dx * invDist;
+                            const radialY = -dy * invDist;
+                            const tangentX = -radialY * 0.25;
+                            const tangentY = radialX * 0.25;
+
+                            targetOffsetX = (radialX + tangentX) * shiftMag;
+                            targetOffsetY = (radialY + tangentY) * shiftMag;
+                        }
+
+                        targetEnergy = Math.max(targetEnergy, pointer.globalPresence * CONFIG.globalWakeFactor);
+                    }
+
+                    // Smoothly interpolate hover energy and elastic position offset
+                    const energySpeed = targetEnergy > n.hoverEnergy ? 0.065 : 0.032;
+                    n.hoverEnergy += (targetEnergy - n.hoverEnergy) * energySpeed;
+
+                    n.offsetX += (targetOffsetX - n.offsetX) * 0.055;
+                    n.offsetY += (targetOffsetY - n.offsetY) * 0.055;
+
+                    n.x = n.driftX + n.offsetX;
+                    n.y = n.driftY + n.offsetY;
+                }
+
+                // 2. Render interconnected filaments (optimized with squared-distance culling & pre-blended colors)
+                ctx.lineCap = 'round';
+                for (let i = 0; i < edges.length; i++) {
+                    const edge = edges[i];
+                    const n1 = edge.a;
+                    const n2 = edge.b;
+
+                    const dx = n2.x - n1.x;
+                    const dy = n2.y - n1.y;
+                    const distSq = dx * dx + dy * dy;
+
+                    if (distSq > edge.maxDistSq) continue;
+
+                    const dist = Math.sqrt(distSq);
+                    const distFade = Math.max(0, 1 - dist / (edge.maxDist * 1.12));
+                    const depthFactor = Math.min(n1.depth, n2.depth);
+
+                    const edgeHover = Math.max(n1.hoverEnergy, n2.hoverEnergy);
+                    const avgHover = (n1.hoverEnergy + n2.hoverEnergy) * 0.5;
+
+                    // Soft, slow breathing pulse when hovered
+                    const pulseWave = 0.5 + 0.5 * Math.sin(time * CONFIG.pulseSpeed + n1.pulsePhase);
+                    const hoverPulse = edgeHover * (0.72 + 0.28 * pulseWave);
+
+                    const rawAlpha = CONFIG.baseOpacity + (CONFIG.hoverOpacity - CONFIG.baseOpacity) * hoverPulse;
+                    const finalAlpha = rawAlpha * distFade * depthFactor;
+
+                    if (finalAlpha < 0.012) continue;
+
+                    const invDist = 1 / (dist + 0.001);
+                    const nx = -dy * invDist;
+                    const ny = dx * invDist;
+                    const midX = (n1.x + n2.x) * 0.5;
+                    const midY = (n1.y + n2.y) * 0.5;
+
+                    // Only allocate a linear gradient on primary strands with noticeable hover energy
+                    let sharedGradient = null;
+                    if (edgeHover > 0.18) {
+                        const c1 = n1.color;
+                        const c2 = n2.color;
+                        sharedGradient = ctx.createLinearGradient(n1.x, n1.y, n2.x, n2.y);
+                        sharedGradient.addColorStop(0, `rgba(${c1.r}, ${c1.g}, ${c1.b}, ${finalAlpha})`);
+                        sharedGradient.addColorStop(0.5, `rgba(38, 214, 119, ${finalAlpha})`);
+                        sharedGradient.addColorStop(1, `rgba(${c2.r}, ${c2.g}, ${c2.b}, ${finalAlpha})`);
+                    }
+
+                    for (let s = 0; s < edge.strands.length; s++) {
+                        const strand = edge.strands[s];
+                        const strandAlpha = finalAlpha * strand.weight * (s === 0 ? 1 : 0.58);
+                        if (strandAlpha < 0.01) continue;
+
+                        const dynamicBend = strand.curveBend + Math.sin(time * 1.5 + strand.phaseOffset) * (0.8 + edgeHover * 1.6);
+                        const cpX = midX + nx * dynamicBend;
+                        const cpY = midY + ny * dynamicBend;
+
+                        ctx.beginPath();
+                        ctx.moveTo(n1.x, n1.y);
+                        ctx.quadraticCurveTo(cpX, cpY, n2.x, n2.y);
+
+                        if (s === 0 && sharedGradient) {
+                            ctx.strokeStyle = sharedGradient;
+                        } else {
+                            ctx.strokeStyle = `rgba(${edge.rgbString}, ${strandAlpha})`;
+                        }
+
+                        ctx.lineWidth = (s === 0 ? 0.9 : 0.48) * depthFactor * (1 + avgHover * 0.45);
+                        ctx.stroke();
+                    }
+                }
+
+                // 3. Render diffused pulsing glow halos & node cores using pre-rendered offscreen sprites
+                for (let i = 0; i < nodes.length; i++) {
+                    const n = nodes[i];
+                    const sprite = nodeSprites[n.colorIdx];
+
+                    const pulse = 0.5 + 0.5 * Math.sin(time * CONFIG.pulseSpeed + n.pulsePhase);
+                    const hoverIntensity = n.hoverEnergy * (0.7 + 0.3 * pulse);
+
+                    const nodeAlpha = (CONFIG.baseOpacity + (CONFIG.hoverOpacity - CONFIG.baseOpacity) * hoverIntensity) * n.depth;
+                    const currentRadius = n.radius * (1 + n.hoverEnergy * (0.15 + 0.22 * pulse));
+
+                    // Wide, soft diffused outer glow halo on hover or bokeh nodes
+                    if (n.hoverEnergy > 0.02 || n.isBokeh) {
+                        const glowRadius = currentRadius * (n.isBokeh ? 5.2 : (6.8 + pulse * 3.4));
+                        const glowDiameter = glowRadius * 2;
+                        const glowAlpha = n.isBokeh
+                            ? nodeAlpha * 0.45
+                            : n.hoverEnergy * CONFIG.hoverOpacity * (0.42 + 0.36 * pulse);
+
+                        ctx.globalAlpha = Math.min(1, glowAlpha);
+                        ctx.drawImage(
+                            sprite.glowCanvas,
+                            n.x - glowRadius,
+                            n.y - glowRadius,
+                            glowDiameter,
+                            glowDiameter
+                        );
+                    }
+
+                    // Crisp gradient node core via pre-rendered sprite
+                    if (!n.isBokeh) {
+                        const coreDiameter = currentRadius * 2.4;
+                        ctx.globalAlpha = Math.min(1, nodeAlpha * 1.15);
+                        ctx.drawImage(
+                            sprite.coreCanvas,
+                            n.x - coreDiameter * 0.5,
+                            n.y - coreDiameter * 0.5,
+                            coreDiameter,
+                            coreDiameter
+                        );
+                    }
+                }
+
+                ctx.globalAlpha = 1;
+                requestAnimationFrame(render);
+            }
+
+            function setupInteractions() {
+                window.addEventListener('mousemove', (e) => {
+                    if (!pointer.isActive) {
+                        pointer.x = e.clientX;
+                        pointer.y = e.clientY;
+                    }
+                    pointer.targetX = e.clientX;
+                    pointer.targetY = e.clientY;
+                    pointer.isActive = true;
+                });
+
+                document.addEventListener('mouseleave', () => {
+                    pointer.isActive = false;
+                });
+
+                window.addEventListener('touchstart', (e) => {
+                    if (e.touches.length > 0) {
+                        pointer.x = e.touches[0].clientX;
+                        pointer.y = e.touches[0].clientY;
+                        pointer.targetX = pointer.x;
+                        pointer.targetY = pointer.y;
+                        pointer.isActive = true;
+                    }
+                }, { passive: true });
+
+                window.addEventListener('touchmove', (e) => {
+                    if (e.touches.length > 0) {
+                        pointer.targetX = e.touches[0].clientX;
+                        pointer.targetY = e.touches[0].clientY;
+                        pointer.isActive = true;
+                    }
+                }, { passive: true });
+
+                window.addEventListener('touchend', () => {
+                    pointer.isActive = false;
+                });
+
+                window.addEventListener('resize', resizeCanvas);
+            }
+
+            window.onload = function () {
+                resizeCanvas();
+                setupInteractions();
+                requestAnimationFrame(render);
+            };
+        })();
+    </script>
+</body>
+</html>

@@ -1,0 +1,1010 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Organic Green Neural Network Background</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        emerald: {
+                            450: '#10b981',
+                            550: '#059669',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow-x: hidden;
+            font-family: 'Inter', sans-serif;
+        }
+        #neural-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 0;
+            pointer-events: none;
+        }
+        /* Custom Range Input Styling */
+        input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            background: transparent;
+            cursor: pointer;
+        }
+        input[type="range"]::-webkit-slider-runnable-track {
+            height: 6px;
+            border-radius: 999px;
+            background: rgba(16, 185, 129, 0.2);
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            height: 16px;
+            width: 16px;
+            border-radius: 50%;
+            background: #10b981;
+            margin-top: -5px;
+            box-shadow: 0 0 10px rgba(16, 185, 129, 0.6);
+            transition: transform 0.15s ease, background-color 0.15s ease;
+        }
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.15);
+            background: #34d399;
+        }
+        .glass-panel {
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 transition-colors duration-500 selection:bg-emerald-500/30 selection:text-emerald-300">
+
+    <!-- Interactive Neural Network Canvas -->
+    <canvas id="neural-canvas"></canvas>
+
+    <!-- Foreground Website Content Container -->
+    <div id="ui-layer" class="relative z-10 min-h-screen flex flex-col justify-between p-4 sm:p-8 md:p-12 pointer-events-none">
+        
+        <!-- Top Navigation Bar -->
+        <header class="w-full max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-4 pointer-events-auto">
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-xl bg-emerald-500/15 border border-emerald-500/40 flex items-center justify-center shadow-lg shadow-emerald-500/10">
+                    <span class="w-3 h-3 rounded-full bg-emerald-400 animate-ping"></span>
+                </div>
+                <div>
+                    <span class="font-semibold tracking-tight text-lg text-white dark:text-white light-text">Synapse<span class="text-emerald-400">BG</span></span>
+                    <span class="hidden sm:inline-block ml-2 text-xs px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-mono">v2.4 Organic</span>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2 sm:gap-3">
+                <!-- Surface Theme Switcher (Dark / Light Website Preview) -->
+                <button id="theme-btn" class="px-3.5 py-2 rounded-xl text-xs sm:text-sm font-medium bg-slate-900/80 border border-slate-800 hover:border-emerald-500/50 text-slate-300 hover:text-white transition-all flex items-center gap-2 glass-panel shadow-sm">
+                    <svg id="theme-icon-dark" class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                    </svg>
+                    <span id="theme-label">Light Surface</span>
+                </button>
+
+                <!-- Toggle UI Visibility for Pure Canvas Inspection -->
+                <button id="zen-btn" class="px-3.5 py-2 rounded-xl text-xs sm:text-sm font-medium bg-slate-900/80 border border-slate-800 hover:border-emerald-500/50 text-slate-300 hover:text-white transition-all flex items-center gap-2 glass-panel shadow-sm">
+                    <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                    </svg>
+                    <span id="zen-label">Hide UI</span>
+                </button>
+
+                <!-- Export Code Modal Button -->
+                <button id="export-btn" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-emerald-500 hover:bg-emerald-400 text-slate-950 transition-all shadow-lg shadow-emerald-500/20 flex items-center gap-1.5">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                    </svg>
+                    <span>Get Embed Code</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Center Content & Live Customizer -->
+        <main id="main-content" class="w-full max-w-7xl mx-auto my-auto py-8 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center transition-opacity duration-500">
+            
+            <!-- Left Hero Demo Section -->
+            <div class="lg:col-span-7 space-y-6 pointer-events-none">
+                <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 text-xs font-medium tracking-wide">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                    MOVE CURSOR TO ILLUMINATE &amp; PULSE NODES
+                </div>
+
+                <h1 id="hero-heading" class="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.1] text-white">
+                    Organic Fibrous <br/>
+                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-300 to-green-500">
+                        Interconnected Nodes
+                    </span>
+                </h1>
+
+                <p id="hero-subtext" class="text-base sm:text-lg text-slate-400 max-w-xl leading-relaxed font-normal">
+                    Engineered to replicate biological and neural web structures with multi-strand curved filaments, depth-of-field bokeh nodes, and a subtle low-opacity resting state that awakens into a rhythmic emerald pulse on hover.
+                </p>
+
+                <!-- Live Telemetry Badges -->
+                <div class="pt-2 flex flex-wrap gap-3 pointer-events-auto">
+                    <div class="px-4 py-2.5 rounded-xl bg-slate-900/60 border border-slate-800/80 glass-panel flex items-center gap-3">
+                        <div class="w-2.5 h-2.5 rounded-full bg-emerald-400" id="pulse-indicator"></div>
+                        <div>
+                            <div class="text-[10px] uppercase tracking-wider text-slate-400 font-mono">Hover State</div>
+                            <div id="telemetry-state" class="text-xs font-semibold text-emerald-400 font-mono">IDLE (LOW OPACITY)</div>
+                        </div>
+                    </div>
+
+                    <div class="px-4 py-2.5 rounded-xl bg-slate-900/60 border border-slate-800/80 glass-panel flex items-center gap-3">
+                        <div>
+                            <div class="text-[10px] uppercase tracking-wider text-slate-400 font-mono">Active Synapses</div>
+                            <div id="telemetry-nodes" class="text-xs font-semibold text-slate-200 font-mono">0 Nodes / 0 Strands</div>
+                        </div>
+                    </div>
+
+                    <button id="regenerate-btn" class="px-4 py-2.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 text-xs font-medium transition-all flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                        </svg>
+                        <span>Regenerate Web</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Right Interactive Control Panel -->
+            <div class="lg:col-span-5 pointer-events-auto">
+                <div id="control-panel" class="p-6 rounded-2xl bg-slate-900/75 border border-slate-800/90 glass-panel shadow-2xl space-y-5">
+                    <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                        <div>
+                            <h2 id="panel-title" class="text-sm font-semibold text-white flex items-center gap-2">
+                                <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path>
+                                </svg>
+                                Background Tuning
+                            </h2>
+                            <p class="text-xs text-slate-400">Customize resting opacity &amp; hover glow pulse</p>
+                        </div>
+                        <button id="reset-btn" class="text-xs text-emerald-400 hover:text-emerald-300 font-mono underline">Reset</button>
+                    </div>
+
+                    <!-- Sliders -->
+                    <div class="space-y-4 text-xs">
+                        <!-- Base Resting Opacity -->
+                        <div>
+                            <div class="flex justify-between mb-1.5">
+                                <span class="text-slate-300 font-medium">Base Resting Opacity</span>
+                                <span id="val-base-opacity" class="font-mono text-emerald-400">14%</span>
+                            </div>
+                            <input id="input-base-opacity" type="range" min="0.03" max="0.45" step="0.01" value="0.14" class="w-full">
+                        </div>
+
+                        <!-- Hover Peak Opacity -->
+                        <div>
+                            <div class="flex justify-between mb-1.5">
+                                <span class="text-slate-300 font-medium">Hover Glow Opacity</span>
+                                <span id="val-hover-opacity" class="font-mono text-emerald-400">92%</span>
+                            </div>
+                            <input id="input-hover-opacity" type="range" min="0.40" max="1.0" step="0.02" value="0.92" class="w-full">
+                        </div>
+
+                        <!-- Hover Activation Radius -->
+                        <div>
+                            <div class="flex justify-between mb-1.5">
+                                <span class="text-slate-300 font-medium">Hover Spotlight Radius</span>
+                                <span id="val-hover-radius" class="font-mono text-emerald-400">280px</span>
+                            </div>
+                            <input id="input-hover-radius" type="range" min="120" max="550" step="10" value="280" class="w-full">
+                        </div>
+
+                        <!-- Pulse Speed -->
+                        <div>
+                            <div class="flex justify-between mb-1.5">
+                                <span class="text-slate-300 font-medium">Glow Pulse Frequency</span>
+                                <span id="val-pulse-speed" class="font-mono text-emerald-400">3.5 Hz</span>
+                            </div>
+                            <input id="input-pulse-speed" type="range" min="1.0" max="8.0" step="0.5" value="3.5" class="w-full">
+                        </div>
+
+                        <!-- Fibrous Multi-strand Density -->
+                        <div>
+                            <div class="flex justify-between mb-1.5">
+                                <span class="text-slate-300 font-medium">Fibrous Web Strands</span>
+                                <span id="val-strands" class="font-mono text-emerald-400">3 Strands</span>
+                            </div>
+                            <input id="input-strands" type="range" min="1" max="5" step="1" value="3" class="w-full">
+                        </div>
+
+                        <!-- Drift Speed -->
+                        <div>
+                            <div class="flex justify-between mb-1.5">
+                                <span class="text-slate-300 font-medium">Organic Drift Speed</span>
+                                <span id="val-drift" class="font-mono text-emerald-400">0.35x</span>
+                            </div>
+                            <input id="input-drift" type="range" min="0" max="1.5" step="0.05" value="0.35" class="w-full">
+                        </div>
+                    </div>
+
+                    <!-- Mode Toggle: Local Spotlight vs Full Global Network Wake -->
+                    <div class="pt-2 border-t border-slate-800 flex items-center justify-between">
+                        <div>
+                            <div class="text-xs font-medium text-slate-200">Global Hover Awakening</div>
+                            <div class="text-[11px] text-slate-400">Boost entire web slightly when cursor enters page</div>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="toggle-global-wake" class="sr-only peer" checked>
+                            <div class="w-10 h-5 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-slate-300 after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500"></div>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Bottom Hint Footer -->
+        <footer id="footer-bar" class="w-full max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-2 pointer-events-auto transition-opacity duration-500">
+            <div class="flex items-center gap-2">
+                <span class="inline-block w-2 h-2 rounded-full bg-emerald-500/60"></span>
+                <span>Inspired by organic neural clusters: Hub nodes + multi-fiber Bezier filaments + depth blur.</span>
+            </div>
+            <div class="font-mono text-[11px]">Click anywhere on empty space to trigger a synaptic ripple wave</div>
+        </footer>
+    </div>
+
+    <!-- Embed Code Modal -->
+    <div id="code-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-slate-950/80 glass-panel">
+        <div class="w-full max-w-2xl rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl overflow-hidden flex flex-col max-h-[85vh]">
+            <div class="px-6 py-4 border-b border-slate-800 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
+                    <h3 class="text-sm font-semibold text-white">Drop-in Website Background Snippet</h3>
+                </div>
+                <button id="close-modal-btn" class="text-slate-400 hover:text-white p-1 rounded-lg">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <div class="p-6 overflow-y-auto space-y-4 text-xs text-slate-300">
+                <p>Copy and paste this self-contained snippet right inside your website's <code class="text-emerald-400 font-mono">&lt;body&gt;</code> tag. It automatically stays behind your content (<code class="text-emerald-400 font-mono">z-index: -1</code>) and reacts to mouse hover across the entire window.</p>
+                <div class="relative">
+                    <pre id="snippet-box" class="p-4 rounded-xl bg-slate-950 border border-slate-800 font-mono text-[11px] text-emerald-300 overflow-x-auto leading-relaxed select-all"></pre>
+                </div>
+            </div>
+            <div class="px-6 py-3.5 bg-slate-950/60 border-t border-slate-800 flex items-center justify-between">
+                <span id="copy-status" class="text-xs text-emerald-400 font-mono opacity-0 transition-opacity">Copied to clipboard!</span>
+                <div class="flex gap-2">
+                    <button id="copy-code-btn" class="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-semibold text-xs transition-all">
+                        Copy Snippet
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            const canvas = document.getElementById('neural-canvas');
+            const ctx = canvas.getContext('2d');
+
+            // Configuration state matching user's requirements:
+            // - Low resting opacity
+            // - Increases opacity & pulses in a green glow when hovered
+            // - Organic clustered structure with fibrous multi-line connections like the uploaded image
+            const config = {
+                baseOpacity: 0.14,          // Low default opacity when not hovered
+                hoverOpacity: 0.92,         // High opacity when hovered
+                hoverRadius: 280,           // Radius of intense hover activation
+                pulseSpeed: 3.5,            // Speed of pulsing glow on hover
+                strandsPerEdge: 3,          // Multi-fiber organic look from the uploaded image
+                driftSpeed: 0.35,           // Gentle floating motion
+                globalWakeOnHover: true,    // Slightly wake the whole background when mouse is on page
+                isLightSurface: false       // Toggle between Dark website bg and Light website bg
+            };
+
+            let width = window.innerWidth;
+            let height = window.innerHeight;
+            let dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+            // Pointer tracking
+            const pointer = {
+                x: -9999,
+                y: -9999,
+                targetX: -9999,
+                targetY: -9999,
+                isActive: false,
+                globalPresence: 0, // Smoothly interpolates 0 -> 1 when mouse enters window
+                ripples: []        // Click shockwaves
+            };
+
+            let nodes = [];
+            let edges = [];
+            let animationFrameId = null;
+
+            /**
+             * Generates an organic, non-uniform distribution of nodes that mimics the uploaded image:
+             * - Dense cluster hubs with many connections
+             * - Medium bridge nodes
+             * - Out-of-focus foreground/background bokeh nodes (depth of field)
+             */
+            function createOrganicNetwork() {
+                nodes = [];
+                edges = [];
+
+                const screenArea = width * height;
+                // Scale node count gracefully across mobile and desktop
+                const totalNodes = Math.max(55, Math.min(145, Math.floor(screenArea / 11500)));
+                const clusterCount = Math.max(4, Math.min(9, Math.floor(totalNodes / 16)));
+
+                // Create organic cluster centers biased toward a diagonal/central band like the reference photo
+                const clusters = [];
+                for (let c = 0; c < clusterCount; c++) {
+                    clusters.push({
+                        x: width * (0.15 + Math.random() * 0.7),
+                        y: height * (0.15 + Math.random() * 0.7),
+                        spread: Math.min(width, height) * (0.14 + Math.random() * 0.22)
+                    });
+                }
+
+                for (let i = 0; i < totalNodes; i++) {
+                    const isHub = Math.random() < 0.18;
+                    const isBokehOutlier = !isHub && Math.random() < 0.22;
+
+                    let x, y;
+                    if (Math.random() < 0.78) {
+                        // Belongs to an organic cluster
+                        const cluster = clusters[Math.floor(Math.random() * clusters.length)];
+                        const angle = Math.random() * Math.PI * 2;
+                        // Gaussian-like radial falloff for dense core
+                        const dist = (Math.random() * Math.random()) * cluster.spread;
+                        x = cluster.x + Math.cos(angle) * dist;
+                        y = cluster.y + Math.sin(angle) * dist;
+                    } else {
+                        // Scattered bridge node
+                        x = Math.random() * width;
+                        y = Math.random() * height;
+                    }
+
+                    // Keep within padded bounds
+                    x = Math.max(20, Math.min(width - 20, x));
+                    y = Math.max(20, Math.min(height - 20, y));
+
+                    // Depth layer (0.2 = far/blurry bokeh, 1.0 = sharp focal plane)
+                    const depth = isBokehOutlier
+                        ? (0.25 + Math.random() * 0.35)
+                        : (0.65 + Math.random() * 0.35);
+
+                    const baseRadius = isHub
+                        ? (3.8 + Math.random() * 3.2)
+                        : isBokehOutlier
+                            ? (2.5 + Math.random() * 4.5)
+                            : (1.6 + Math.random() * 2.2);
+
+                    nodes.push({
+                        id: i,
+                        x,
+                        y,
+                        originX: x,
+                        originY: y,
+                        vx: (Math.random() - 0.5) * 0.6,
+                        vy: (Math.random() - 0.5) * 0.6,
+                        radius: baseRadius,
+                        depth,
+                        isHub,
+                        isBokehOutlier,
+                        pulsePhase: Math.random() * Math.PI * 2,
+                        hoverEnergy: 0, // 0 to 1 smooth activation
+                        degree: 0
+                    });
+                }
+
+                // Build interconnections with fibrous curved strands
+                const maxConnectDist = Math.min(width, height) * 0.26;
+                const hubConnectDist = maxConnectDist * 1.35;
+
+                for (let i = 0; i < nodes.length; i++) {
+                    const n1 = nodes[i];
+                    // Sort neighbors by distance to favor organic local webs + long hub axons
+                    const candidates = [];
+                    for (let j = i + 1; j < nodes.length; j++) {
+                        const n2 = nodes[j];
+                        const dx = n1.x - n2.x;
+                        const dy = n1.y - n2.y;
+                        const dist = Math.hypot(dx, dy);
+                        const limit = (n1.isHub || n2.isHub) ? hubConnectDist : maxConnectDist;
+
+                        if (dist < limit) {
+                            candidates.push({ node: n2, dist, limit });
+                        }
+                    }
+
+                    candidates.sort((a, b) => a.dist - b.dist);
+
+                    // Hubs get denser radiating webs like the black nodes in the reference image
+                    const maxLinksForThisNode = n1.isHub ? 9 : 4;
+                    let created = 0;
+
+                    for (let k = 0; k < candidates.length && created < maxLinksForThisNode; k++) {
+                        const { node: n2, dist, limit } = candidates[k];
+                        if (n2.degree >= (n2.isHub ? 12 : 6)) continue;
+
+                        // Probability drops with distance
+                        const prob = Math.pow(1 - dist / limit, 1.3);
+                        if (Math.random() < prob || created < 2) {
+                            // Pre-generate fibrous strand offsets for curved Bezier filaments
+                            const strandOffsets = [];
+                            for (let s = 0; s < 5; s++) {
+                                strandOffsets.push({
+                                    curveBend: (Math.random() - 0.5) * 34,
+                                    jitterA: (Math.random() - 0.5) * 12,
+                                    jitterB: (Math.random() - 0.5) * 12,
+                                    weight: s === 0 ? 1.0 : (0.35 + Math.random() * 0.45),
+                                    phaseOffset: Math.random() * Math.PI * 2
+                                });
+                            }
+
+                            edges.push({
+                                a: n1,
+                                b: n2,
+                                maxDist: limit,
+                                strands: strandOffsets
+                            });
+
+                            n1.degree++;
+                            n2.degree++;
+                            created++;
+                        }
+                    }
+                }
+
+                updateTelemetryCount();
+            }
+
+            function updateTelemetryCount() {
+                const el = document.getElementById('telemetry-nodes');
+                if (el) {
+                    const totalStrands = edges.length * config.strandsPerEdge;
+                    el.textContent = `${nodes.length} Nodes / ${totalStrands} Strands`;
+                }
+            }
+
+            function resizeCanvas() {
+                width = window.innerWidth;
+                height = window.innerHeight;
+                dpr = Math.min(window.devicePixelRatio || 1, 2);
+                canvas.width = width * dpr;
+                canvas.height = height * dpr;
+                ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+                createOrganicNetwork();
+            }
+
+            function render(timestamp) {
+                const time = timestamp * 0.001;
+                ctx.clearRect(0, 0, width, height);
+
+                // Smoothly interpolate pointer position and global presence
+                if (pointer.isActive) {
+                    pointer.x += (pointer.targetX - pointer.x) * 0.18;
+                    pointer.y += (pointer.targetY - pointer.y) * 0.18;
+                    pointer.globalPresence += (1 - pointer.globalPresence) * 0.06;
+                } else {
+                    pointer.globalPresence += (0 - pointer.globalPresence) * 0.04;
+                }
+
+                // Update ripple waves
+                for (let r = pointer.ripples.length - 1; r >= 0; r--) {
+                    const ripple = pointer.ripples[r];
+                    ripple.radius += 6.5;
+                    ripple.alpha *= 0.96;
+                    if (ripple.alpha < 0.01) {
+                        pointer.ripples.splice(r, 1);
+                    }
+                }
+
+                // Determine palette based on Dark or Light website surface
+                // User requested green interconnected nodes
+                const coreGreen = config.isLightSurface ? '5, 150, 105' : '52, 211, 153';     // Emerald core
+                const brightGreen = config.isLightSurface ? '16, 185, 129' : '110, 231, 183'; // Neon mint highlight
+                const deepGreen = config.isLightSurface ? '4, 120, 87' : '16, 185, 129';      // Ambient web green
+
+                // 1. Update Node Positions & Calculate Hover Activation Energy
+                let maxHoverDetected = 0;
+
+                for (let i = 0; i < nodes.length; i++) {
+                    const n = nodes[i];
+
+                    // Organic floating drift
+                    n.x += n.vx * config.driftSpeed * n.depth;
+                    n.y += n.vy * config.driftSpeed * n.depth;
+
+                    // Soft elastic tether around origin so clusters keep their organic look
+                    const dxOrigin = n.originX - n.x;
+                    const dyOrigin = n.originY - n.y;
+                    n.vx += dxOrigin * 0.00035;
+                    n.vy += dyOrigin * 0.00035;
+
+                    // Gentle damping
+                    n.vx *= 0.995;
+                    n.vy *= 0.995;
+
+                    // Compute proximity to mouse cursor
+                    let targetEnergy = 0;
+                    if (pointer.isActive) {
+                        const dx = n.x - pointer.x;
+                        const dy = n.y - pointer.y;
+                        const dist = Math.hypot(dx, dy);
+
+                        if (dist < config.hoverRadius) {
+                            // Smooth cubic falloff inside hover spotlight
+                            const norm = 1 - dist / config.hoverRadius;
+                            targetEnergy = norm * norm * (3 - 2 * norm);
+
+                            // Subtle magnetic attraction toward cursor on hover
+                            n.x -= (dx / (dist + 1)) * targetEnergy * 0.35;
+                            n.y -= (dy / (dist + 1)) * targetEnergy * 0.35;
+                        }
+
+                        // Optional global subtle wake when mouse is anywhere on the website
+                        if (config.globalWakeOnHover) {
+                            targetEnergy = Math.max(targetEnergy, pointer.globalPresence * 0.22);
+                        }
+                    }
+
+                    // Add energy from click ripples
+                    for (let r = 0; r < pointer.ripples.length; r++) {
+                        const rp = pointer.ripples[r];
+                        const distToWave = Math.abs(Math.hypot(n.x - rp.x, n.y - rp.y) - rp.radius);
+                        if (distToWave < 55) {
+                            targetEnergy = Math.min(1, targetEnergy + (1 - distToWave / 55) * rp.alpha);
+                        }
+                    }
+
+                    // Smooth transition of node's hover energy
+                    const lerpFactor = targetEnergy > n.hoverEnergy ? 0.14 : 0.05;
+                    n.hoverEnergy += (targetEnergy - n.hoverEnergy) * lerpFactor;
+
+                    if (n.hoverEnergy > maxHoverDetected) {
+                        maxHoverDetected = n.hoverEnergy;
+                    }
+                }
+
+                // 2. Render Interconnected Fibrous Filaments (Curved Bezier bundles)
+                ctx.lineCap = 'round';
+                for (let i = 0; i < edges.length; i++) {
+                    const edge = edges[i];
+                    const n1 = edge.a;
+                    const n2 = edge.b;
+
+                    const dx = n2.x - n1.x;
+                    const dy = n2.y - n1.y;
+                    const dist = Math.hypot(dx, dy);
+
+                    if (dist > edge.maxDist * 1.15) continue;
+
+                    const distFade = Math.max(0, 1 - dist / (edge.maxDist * 1.15));
+                    const depthFactor = Math.min(n1.depth, n2.depth);
+
+                    // Combined hover state of the two connected nodes
+                    const edgeHover = Math.max(n1.hoverEnergy, n2.hoverEnergy);
+                    const avgHover = (n1.hoverEnergy + n2.hoverEnergy) * 0.5;
+
+                    // Rhythmic pulse wave when hovered
+                    const pulseWave = 0.5 + 0.5 * Math.sin(time * config.pulseSpeed + n1.pulsePhase);
+                    const activePulseBoost = edgeHover * (0.65 + 0.35 * pulseWave);
+
+                    // Interpolate between low base opacity and high hover opacity
+                    const rawAlpha = config.baseOpacity + (config.hoverOpacity - config.baseOpacity) * activePulseBoost;
+                    const finalAlpha = rawAlpha * distFade * depthFactor;
+
+                    if (finalAlpha < 0.01) continue;
+
+                    // Normal vector perpendicular to edge for organic curved strands
+                    const nx = -dy / (dist + 0.001);
+                    const ny = dx / (dist + 0.001);
+                    const midX = (n1.x + n2.x) * 0.5;
+                    const midY = (n1.y + n2.y) * 0.5;
+
+                    const strandCount = config.strandsPerEdge;
+                    for (let s = 0; s < strandCount; s++) {
+                        const strand = edge.strands[s];
+                        // Subtle breathing of the filaments when hovered
+                        const dynamicBend = strand.curveBend + Math.sin(time * 2 + strand.phaseOffset) * (2 + edgeHover * 5);
+                        const cpX = midX + nx * dynamicBend;
+                        const cpY = midY + ny * dynamicBend;
+
+                        ctx.beginPath();
+                        ctx.moveTo(n1.x, n1.y);
+                        ctx.quadraticCurveTo(cpX, cpY, n2.x, n2.y);
+
+                        const strandAlpha = finalAlpha * strand.weight * (s === 0 ? 1 : 0.65);
+                        ctx.strokeStyle = edgeHover > 0.25
+                            ? `rgba(${coreGreen}, ${strandAlpha})`
+                            : `rgba(${deepGreen}, ${strandAlpha})`;
+
+                        ctx.lineWidth = (s === 0 ? 1.15 : 0.65) * depthFactor * (1 + avgHover * 0.75);
+                        ctx.stroke();
+                    }
+
+                    // Synaptic energy packet traveling along highly activated edges
+                    if (edgeHover > 0.35) {
+                        const packetT = (time * 0.65 + edge.strands[0].phaseOffset) % 1;
+                        const mainBend = edge.strands[0].curveBend;
+                        const cpX = midX + nx * mainBend;
+                        const cpY = midY + ny * mainBend;
+
+                        // Quadratic Bezier point at t = packetT
+                        const invT = 1 - packetT;
+                        const px = invT * invT * n1.x + 2 * invT * packetT * cpX + packetT * packetT * n2.x;
+                        const py = invT * invT * n1.y + 2 * invT * packetT * cpY + packetT * packetT * n2.y;
+
+                        ctx.beginPath();
+                        ctx.arc(px, py, 1.6 * (0.8 + edgeHover * 0.6), 0, Math.PI * 2);
+                        ctx.fillStyle = `rgba(${brightGreen}, ${edgeHover * distFade * 0.9})`;
+                        ctx.fill();
+                    }
+                }
+
+                // 3. Render Nodes (Depth-of-Field Bokeh + Sharp Hubs + Pulsing Hover Glow)
+                for (let i = 0; i < nodes.length; i++) {
+                    const n = nodes[i];
+
+                    // Pulsing oscillation when hovered
+                    const pulse = 0.5 + 0.5 * Math.sin(time * config.pulseSpeed + n.pulsePhase);
+                    const hoverIntensity = n.hoverEnergy * (0.7 + 0.3 * pulse);
+
+                    // Node opacity transitions smoothly from low baseOpacity to hoverOpacity
+                    const nodeAlpha = (config.baseOpacity + (config.hoverOpacity - config.baseOpacity) * hoverIntensity) * n.depth;
+
+                    // Radius expands rhythmically when pulsing in a glow
+                    const currentRadius = n.radius * (1 + n.hoverEnergy * (0.25 + 0.35 * pulse));
+
+                    // Outer pulsing glow halo (activated on hover or for out-of-focus bokeh nodes)
+                    if (n.hoverEnergy > 0.06 || n.isBokehOutlier) {
+                        const glowRadius = currentRadius * (n.isBokehOutlier ? 3.8 : (3.2 + pulse * 2.2));
+                        const glowAlpha = n.isBokehOutlier
+                            ? nodeAlpha * 0.35
+                            : n.hoverEnergy * config.hoverOpacity * (0.35 + 0.35 * pulse);
+
+                        const grad = ctx.createRadialGradient(n.x, n.y, currentRadius * 0.2, n.x, n.y, glowRadius);
+                        grad.addColorStop(0, `rgba(${brightGreen}, ${Math.min(1, glowAlpha)})`);
+                        grad.addColorStop(0.45, `rgba(${coreGreen}, ${Math.min(1, glowAlpha * 0.45)})`);
+                        grad.addColorStop(1, `rgba(${coreGreen}, 0)`);
+
+                        ctx.beginPath();
+                        ctx.arc(n.x, n.y, glowRadius, 0, Math.PI * 2);
+                        ctx.fillStyle = grad;
+                        ctx.fill();
+                    }
+
+                    // Solid inner node core
+                    if (!n.isBokehOutlier) {
+                        ctx.beginPath();
+                        ctx.arc(n.x, n.y, currentRadius, 0, Math.PI * 2);
+                        ctx.fillStyle = n.hoverEnergy > 0.3
+                            ? `rgba(${brightGreen}, ${Math.min(1, nodeAlpha * 1.15)})`
+                            : `rgba(${coreGreen}, ${Math.min(1, nodeAlpha)})`;
+                        ctx.fill();
+
+                        // Bright hot-center specularity on active hub nodes
+                        if (n.hoverEnergy > 0.45 && n.isHub) {
+                            ctx.beginPath();
+                            ctx.arc(n.x, n.y, currentRadius * 0.45, 0, Math.PI * 2);
+                            ctx.fillStyle = `rgba(236, 253, 245, ${n.hoverEnergy * (0.6 + 0.4 * pulse)})`;
+                            ctx.fill();
+                        }
+                    }
+                }
+
+                // Update telemetry UI badge
+                const stateEl = document.getElementById('telemetry-state');
+                const pulseDot = document.getElementById('pulse-indicator');
+                if (stateEl && pulseDot) {
+                    if (maxHoverDetected > 0.25) {
+                        stateEl.textContent = `PULSING GLOW (${Math.round(maxHoverDetected * 100)}%)`;
+                        stateEl.className = 'text-xs font-semibold text-emerald-300 font-mono';
+                        pulseDot.style.boxShadow = '0 0 12px #34d399';
+                    } else {
+                        stateEl.textContent = `RESTING (${Math.round(config.baseOpacity * 100)}% OPACITY)`;
+                        stateEl.className = 'text-xs font-semibold text-slate-400 font-mono';
+                        pulseDot.style.boxShadow = 'none';
+                    }
+                }
+
+                animationFrameId = requestAnimationFrame(render);
+            }
+
+            function setupInteractions() {
+                window.addEventListener('mousemove', (e) => {
+                    if (!pointer.isActive) {
+                        pointer.x = e.clientX;
+                        pointer.y = e.clientY;
+                    }
+                    pointer.targetX = e.clientX;
+                    pointer.targetY = e.clientY;
+                    pointer.isActive = true;
+                });
+
+                document.addEventListener('mouseleave', () => {
+                    pointer.isActive = false;
+                });
+
+                // Touch support for mobile devices
+                window.addEventListener('touchstart', (e) => {
+                    if (e.touches.length > 0) {
+                        pointer.x = e.touches[0].clientX;
+                        pointer.y = e.touches[0].clientY;
+                        pointer.targetX = pointer.x;
+                        pointer.targetY = pointer.y;
+                        pointer.isActive = true;
+                    }
+                }, { passive: true });
+
+                window.addEventListener('touchmove', (e) => {
+                    if (e.touches.length > 0) {
+                        pointer.targetX = e.touches[0].clientX;
+                        pointer.targetY = e.touches[0].clientY;
+                        pointer.isActive = true;
+                    }
+                }, { passive: true });
+
+                window.addEventListener('touchend', () => {
+                    pointer.isActive = false;
+                });
+
+                // Click anywhere to trigger a synaptic pulse wave
+                window.addEventListener('click', (e) => {
+                    // Ignore clicks on interactive controls
+                    if (e.target.closest('button, input, label, #control-panel, #code-modal')) return;
+                    pointer.ripples.push({
+                        x: e.clientX,
+                        y: e.clientY,
+                        radius: 10,
+                        alpha: 1.0
+                    });
+                });
+
+                window.addEventListener('resize', resizeCanvas);
+
+                // Control Sliders
+                const bindSlider = (id, valId, key, formatter, afterChange) => {
+                    const input = document.getElementById(id);
+                    const label = document.getElementById(valId);
+                    input.addEventListener('input', (e) => {
+                        const v = parseFloat(e.target.value);
+                        config[key] = v;
+                        label.textContent = formatter(v);
+                        if (afterChange) afterChange();
+                    });
+                };
+
+                bindSlider('input-base-opacity', 'val-base-opacity', 'baseOpacity', v => `${Math.round(v * 100)}%`);
+                bindSlider('input-hover-opacity', 'val-hover-opacity', 'hoverOpacity', v => `${Math.round(v * 100)}%`);
+                bindSlider('input-hover-radius', 'val-hover-radius', 'hoverRadius', v => `${Math.round(v)}px`);
+                bindSlider('input-pulse-speed', 'val-pulse-speed', 'pulseSpeed', v => `${v.toFixed(1)} Hz`);
+                bindSlider('input-strands', 'val-strands', 'strandsPerEdge', v => `${v} Strand${v > 1 ? 's' : ''}`, updateTelemetryCount);
+                bindSlider('input-drift', 'val-drift', 'driftSpeed', v => `${v.toFixed(2)}x`);
+
+                const globalWakeToggle = document.getElementById('toggle-global-wake');
+                globalWakeToggle.addEventListener('change', (e) => {
+                    config.globalWakeOnHover = e.target.checked;
+                });
+
+                // Reset Defaults
+                document.getElementById('reset-btn').addEventListener('click', () => {
+                    config.baseOpacity = 0.14;
+                    config.hoverOpacity = 0.92;
+                    config.hoverRadius = 280;
+                    config.pulseSpeed = 3.5;
+                    config.strandsPerEdge = 3;
+                    config.driftSpeed = 0.35;
+                    config.globalWakeOnHover = true;
+
+                    document.getElementById('input-base-opacity').value = 0.14;
+                    document.getElementById('val-base-opacity').textContent = '14%';
+                    document.getElementById('input-hover-opacity').value = 0.92;
+                    document.getElementById('val-hover-opacity').textContent = '92%';
+                    document.getElementById('input-hover-radius').value = 280;
+                    document.getElementById('val-hover-radius').textContent = '280px';
+                    document.getElementById('input-pulse-speed').value = 3.5;
+                    document.getElementById('val-pulse-speed').textContent = '3.5 Hz';
+                    document.getElementById('input-strands').value = 3;
+                    document.getElementById('val-strands').textContent = '3 Strands';
+                    document.getElementById('input-drift').value = 0.35;
+                    document.getElementById('val-drift').textContent = '0.35x';
+                    globalWakeToggle.checked = true;
+                    updateTelemetryCount();
+                });
+
+                // Regenerate network button
+                document.getElementById('regenerate-btn').addEventListener('click', () => {
+                    createOrganicNetwork();
+                });
+
+                // Dark / Light Surface Switcher (to preview on both white and dark websites)
+                const themeBtn = document.getElementById('theme-btn');
+                const themeLabel = document.getElementById('theme-label');
+                const heroHeading = document.getElementById('hero-heading');
+                const heroSubtext = document.getElementById('hero-subtext');
+
+                themeBtn.addEventListener('click', () => {
+                    config.isLightSurface = !config.isLightSurface;
+                    if (config.isLightSurface) {
+                        document.body.classList.remove('bg-slate-950', 'text-slate-100');
+                        document.body.classList.add('bg-slate-50', 'text-slate-900');
+                        heroHeading.classList.remove('text-white');
+                        heroHeading.classList.add('text-slate-900');
+                        heroSubtext.classList.remove('text-slate-400');
+                        heroSubtext.classList.add('text-slate-600');
+                        themeLabel.textContent = 'Dark Surface';
+                    } else {
+                        document.body.classList.remove('bg-slate-50', 'text-slate-900');
+                        document.body.classList.add('bg-slate-950', 'text-slate-100');
+                        heroHeading.classList.remove('text-slate-900');
+                        heroHeading.classList.add('text-white');
+                        heroSubtext.classList.remove('text-slate-600');
+                        heroSubtext.classList.add('text-slate-400');
+                        themeLabel.textContent = 'Light Surface';
+                    }
+                });
+
+                // Hide UI (Zen Mode)
+                let uiHidden = false;
+                const zenBtn = document.getElementById('zen-btn');
+                const zenLabel = document.getElementById('zen-label');
+                const mainContent = document.getElementById('main-content');
+                const footerBar = document.getElementById('footer-bar');
+
+                zenBtn.addEventListener('click', () => {
+                    uiHidden = !uiHidden;
+                    mainContent.style.opacity = uiHidden ? '0' : '1';
+                    mainContent.style.pointerEvents = uiHidden ? 'none' : '';
+                    footerBar.style.opacity = uiHidden ? '0' : '1';
+                    zenLabel.textContent = uiHidden ? 'Show UI' : 'Hide UI';
+                });
+
+                // Embed Code Generator Modal
+                const modal = document.getElementById('code-modal');
+                const snippetBox = document.getElementById('snippet-box');
+                const copyStatus = document.getElementById('copy-status');
+
+                document.getElementById('export-btn').addEventListener('click', () => {
+                    snippetBox.textContent = generateEmbedSnippet();
+                    modal.classList.remove('hidden');
+                    modal.classList.add('flex');
+                });
+
+                document.getElementById('close-modal-btn').addEventListener('click', () => {
+                    modal.classList.add('hidden');
+                    modal.classList.remove('flex');
+                });
+
+                document.getElementById('copy-code-btn').addEventListener('click', () => {
+                    const textarea = document.createElement('textarea');
+                    textarea.value = snippetBox.textContent;
+                    document.body.appendChild(textarea);
+                    textarea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textarea);
+
+                    copyStatus.style.opacity = '1';
+                    setTimeout(() => { copyStatus.style.opacity = '0'; }, 2200);
+                });
+            }
+
+            function generateEmbedSnippet() {
+                return `<!-- Green Interconnected Nodes Website Background -->
+<canvas id="neural-bg-canvas" style="position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:-1;pointer-events:none;"></canvas>
+<script>
+(function(){
+  const canvas = document.getElementById('neural-bg-canvas');
+  const ctx = canvas.getContext('2d');
+  const CFG = {
+    baseOpacity: ${config.baseOpacity},
+    hoverOpacity: ${config.hoverOpacity},
+    hoverRadius: ${config.hoverRadius},
+    pulseSpeed: ${config.pulseSpeed},
+    strands: ${config.strandsPerEdge},
+    drift: ${config.driftSpeed}
+  };
+  let w, h, nodes = [], edges = [], ptr = { x: -9999, y: -9999, active: false };
+  function init() {
+    w = canvas.width = window.innerWidth;
+    h = canvas.height = window.innerHeight;
+    nodes = []; edges = [];
+    const count = Math.max(55, Math.min(130, Math.floor((w * h) / 12000)));
+    for (let i = 0; i < count; i++) {
+      const hub = Math.random() < 0.18;
+      nodes.push({
+        x: Math.random() * w, y: Math.random() * h,
+        vx: (Math.random() - 0.5) * 0.5, vy: (Math.random() - 0.5) * 0.5,
+        r: hub ? 4 + Math.random() * 2.5 : 1.8 + Math.random() * 2,
+        hub, phase: Math.random() * 6.28, energy: 0
+      });
+    }
+    const maxD = Math.min(w, h) * 0.25;
+    for (let i = 0; i < nodes.length; i++) {
+      for (let j = i + 1; j < nodes.length; j++) {
+        const d = Math.hypot(nodes[i].x - nodes[j].x, nodes[i].y - nodes[j].y);
+        if (d < maxD && Math.random() < 0.35) edges.push({ a: nodes[i], b: nodes[j], maxD, bend: (Math.random() - 0.5) * 28 });
+      }
+    }
+  }
+  window.addEventListener('resize', init);
+  window.addEventListener('mousemove', e => { ptr.x = e.clientX; ptr.y = e.clientY; ptr.active = true; });
+  window.addEventListener('mouseleave', () => ptr.active = false);
+  init();
+  (function loop(t) {
+    const time = t * 0.001;
+    ctx.clearRect(0, 0, w, h);
+    nodes.forEach(n => {
+      n.x += n.vx * CFG.drift; n.y += n.vy * CFG.drift;
+      if (n.x < 0 || n.x > w) n.vx *= -1;
+      if (n.y < 0 || n.y > h) n.vy *= -1;
+      const d = ptr.active ? Math.hypot(n.x - ptr.x, n.y - ptr.y) : 9999;
+      const target = d < CFG.hoverRadius ? Math.pow(1 - d / CFG.hoverRadius, 2) : (ptr.active ? 0.18 : 0);
+      n.energy += (target - n.energy) * 0.1;
+    });
+    edges.forEach(e => {
+      const dx = e.b.x - e.a.x, dy = e.b.y - e.a.y, dist = Math.hypot(dx, dy);
+      if (dist > e.maxD) return;
+      const hv = Math.max(e.a.energy, e.b.energy);
+      const pulse = 0.5 + 0.5 * Math.sin(time * CFG.pulseSpeed + e.a.phase);
+      const alpha = (CFG.baseOpacity + (CFG.hoverOpacity - CFG.baseOpacity) * hv * (0.65 + 0.35 * pulse)) * (1 - dist / e.maxD);
+      for (let s = 0; s < CFG.strands; s++) {
+        ctx.beginPath();
+        ctx.moveTo(e.a.x, e.a.y);
+        ctx.quadraticCurveTo((e.a.x + e.b.x)/2 - dy/dist * e.bend * (s - 1)*0.6, (e.a.y + e.b.y)/2 + dx/dist * e.bend * (s - 1)*0.6, e.b.x, e.b.y);
+        ctx.strokeStyle = \`rgba(52, 211, 153, \${alpha * (s === 0 ? 1 : 0.55)})\`;
+        ctx.lineWidth = s === 0 ? 1.1 : 0.6;
+        ctx.stroke();
+      }
+    });
+    nodes.forEach(n => {
+      const pulse = 0.5 + 0.5 * Math.sin(time * CFG.pulseSpeed + n.phase);
+      const alpha = CFG.baseOpacity + (CFG.hoverOpacity - CFG.baseOpacity) * n.energy * (0.7 + 0.3 * pulse);
+      const rad = n.r * (1 + n.energy * 0.35 * pulse);
+      if (n.energy > 0.05) {
+        const g = ctx.createRadialGradient(n.x, n.y, rad * 0.2, n.x, n.y, rad * 4);
+        g.addColorStop(0, \`rgba(110, 231, 183, \${n.energy * 0.65 * pulse})\`);
+        g.addColorStop(1, 'rgba(16, 185, 129, 0)');
+        ctx.fillStyle = g; ctx.beginPath(); ctx.arc(n.x, n.y, rad * 4, 0, 6.28); ctx.fill();
+      }
+      ctx.fillStyle = \`rgba(52, 211, 153, \${alpha})\`;
+      ctx.beginPath(); ctx.arc(n.x, n.y, rad, 0, 6.28); ctx.fill();
+    });
+    requestAnimationFrame(loop);
+  })(0);
+})();
+<\/script>`;
+            }
+
+            window.onload = function () {
+                resizeCanvas();
+                setupInteractions();
+                animationFrameId = requestAnimationFrame(render);
+            };
+        })();
+    </script>
+</body>
+</html>
