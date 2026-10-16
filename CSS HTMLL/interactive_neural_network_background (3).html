@@ -1,0 +1,1327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Organic Interconnected Nodes Pattern Background</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #ffffff;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+        #neural-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 0;
+            display: block;
+            pointer-events: none;
+        }
+        /* Custom Range Slider Styling */
+        input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            height: 5px;
+            background: #e2e8f0;
+            border-radius: 999px;
+            outline: none;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            background: #10b981;
+            cursor: pointer;
+            border: 2px solid #ffffff;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+            transition: transform 0.15s ease, background-color 0.15s ease;
+        }
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.15);
+            background: #059669;
+        }
+        .custom-scroll::-webkit-scrollbar {
+            width: 5px;
+        }
+        .custom-scroll::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scroll::-webkit-scrollbar-thumb {
+            background: rgba(16, 185, 129, 0.25);
+            border-radius: 999px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Pure Full-Screen Interconnected Nodes Background -->
+    <canvas id="neural-canvas"></canvas>
+
+    <!-- Floating Action Bar (Top Right) -->
+    <div class="fixed top-4 right-4 z-30 flex items-center gap-2.5">
+        <button id="toggle-tune-btn" class="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/90 backdrop-blur-md border border-emerald-500/25 text-slate-800 text-xs font-semibold shadow-lg shadow-emerald-950/5 hover:bg-emerald-50/90 hover:border-emerald-500/40 transition-all">
+            <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/>
+            </svg>
+            <span>Tune Settings</span>
+        </button>
+
+        <button id="open-code-btn" class="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-500 text-white text-xs font-semibold shadow-lg shadow-emerald-600/20 hover:from-emerald-500 hover:to-teal-400 transition-all">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+            </svg>
+            <span>Copy Embed Code</span>
+        </button>
+    </div>
+
+    <!-- Comprehensive Tuning Drawer Panel -->
+    <div id="tune-panel" class="fixed top-16 right-4 z-30 w-80 max-h-[calc(100vh-5.5rem)] bg-white/95 backdrop-blur-xl border border-slate-200/90 rounded-2xl shadow-2xl shadow-slate-900/10 flex flex-col overflow-hidden transition-all duration-200 opacity-0 pointer-events-none translate-y-2">
+        <!-- Header -->
+        <div class="px-4 py-3.5 border-b border-slate-100 flex items-center justify-between bg-gradient-to-r from-emerald-50/70 to-white">
+            <div>
+                <h2 class="text-xs font-bold uppercase tracking-wider text-slate-800">Network Configuration</h2>
+                <p class="text-[11px] text-slate-500">Live tune nodes, links & hover physics</p>
+            </div>
+            <div class="flex items-center gap-1.5">
+                <button id="reset-defaults-btn" class="text-[11px] font-medium text-emerald-700 hover:text-emerald-800 bg-emerald-100/70 hover:bg-emerald-100 px-2.5 py-1 rounded-lg transition-colors">
+                    Reset
+                </button>
+                <button id="close-tune-btn" class="p-1 text-slate-400 hover:text-slate-600 rounded-lg">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Scrollable Settings Controls -->
+        <div class="p-4 space-y-5 overflow-y-auto custom-scroll text-xs">
+            <!-- Section 1: Opacity & Hover Behavior -->
+            <div class="space-y-3">
+                <div class="text-[11px] font-bold uppercase tracking-wider text-emerald-700 flex items-center gap-1.5">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                    <span>Opacity & Hover Zone</span>
+                </div>
+
+                <div>
+                    <div class="flex justify-between mb-1">
+                        <label class="font-medium text-slate-700">Other Areas Opacity (Resting)</label>
+                        <span id="val-baseOpacity" class="font-semibold text-emerald-700">70%</span>
+                    </div>
+                    <input id="ctrl-baseOpacity" type="range" min="0.05" max="1" step="0.01" value="0.70" class="w-full">
+                </div>
+
+                <div>
+                    <div class="flex justify-between mb-1">
+                        <label class="font-medium text-slate-700">Hover Area Opacity</label>
+                        <span id="val-hoverOpacity" class="font-semibold text-emerald-700">6%</span>
+                    </div>
+                    <input id="ctrl-hoverOpacity" type="range" min="0" max="1" step="0.01" value="0.06" class="w-full">
+                </div>
+
+                <div>
+                    <div class="flex justify-between mb-1">
+                        <label class="font-medium text-slate-700">Hover Spotlight Radius</label>
+                        <span id="val-hoverRadius" class="font-semibold text-emerald-700">340px</span>
+                    </div>
+                    <input id="ctrl-hoverRadius" type="range" min="100" max="750" step="10" value="340" class="w-full">
+                </div>
+
+                <div>
+                    <div class="flex justify-between mb-1">
+                        <label class="font-medium text-slate-700">Repel Distance (Move Away)</label>
+                        <span id="val-repelStrength" class="font-semibold text-emerald-700">10px</span>
+                    </div>
+                    <input id="ctrl-repelStrength" type="range" min="0" max="45" step="1" value="10" class="w-full">
+                </div>
+
+                <div class="flex items-center justify-between pt-1">
+                    <label for="ctrl-showGlow" class="font-medium text-slate-700">Subtle Hover Glow Halo</label>
+                    <input id="ctrl-showGlow" type="checkbox" checked class="w-4 h-4 accent-emerald-600 rounded cursor-pointer">
+                </div>
+            </div>
+
+            <hr class="border-slate-100">
+
+            <!-- Section 2: Nodes & Density (Topology) -->
+            <div class="space-y-3">
+                <div class="text-[11px] font-bold uppercase tracking-wider text-emerald-700 flex items-center gap-1.5">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                    <span>Nodes & Density</span>
+                </div>
+
+                <div>
+                    <div class="flex justify-between mb-1">
+                        <label class="font-medium text-slate-700">Node Dot Size Scale</label>
+                        <span id="val-nodeSizeScale" class="font-semibold text-emerald-700">0.62x</span>
+                    </div>
+                    <input id="ctrl-nodeSizeScale" type="range" min="0.25" max="2.0" step="0.05" value="0.62" class="w-full">
+                </div>
+
+                <div>
+                    <div class="flex justify-between mb-1">
+                        <label class="font-medium text-slate-700">Grid Cell Size (Smaller = Denser)</label>
+                        <span id="val-cellSize" class="font-semibold text-emerald-700">96px</span>
+                    </div>
+                    <input id="ctrl-cellSize" type="range" min="65" max="200" step="2" value="96" class="w-full">
+                </div>
+
+                <div>
+                    <div class="flex justify-between mb-1">
+                        <label class="font-medium text-slate-700">Nodes Per Cluster</label>
+                        <span id="val-nodesPerCell" class="font-semibold text-emerald-700">6</span>
+                    </div>
+                    <input id="ctrl-nodesPerCell" type="range" min="2" max="11" step="1" value="6" class="w-full">
+                </div>
+            </div>
+
+            <hr class="border-slate-100">
+
+            <!-- Section 3: Interconnected Lines -->
+            <div class="space-y-3">
+                <div class="text-[11px] font-bold uppercase tracking-wider text-emerald-700 flex items-center gap-1.5">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                    <span>Interconnected Filaments</span>
+                </div>
+
+                <div>
+                    <div class="flex justify-between mb-1">
+                        <label class="font-medium text-slate-700">Line Thickness</label>
+                        <span id="val-edgeWidth" class="font-semibold text-emerald-700">0.70px</span>
+                    </div>
+                    <input id="ctrl-edgeWidth" type="range" min="0.2" max="2.5" step="0.05" value="0.70" class="w-full">
+                </div>
+
+                <div>
+                    <div class="flex justify-between mb-1">
+                        <label class="font-medium text-slate-700">Connection Reach Distance</label>
+                        <span id="val-connectionReach" class="font-semibold text-emerald-700">1.28x</span>
+                    </div>
+                    <input id="ctrl-connectionReach" type="range" min="0.7" max="2.2" step="0.05" value="1.28" class="w-full">
+                </div>
+
+                <div>
+                    <div class="flex justify-between mb-1">
+                        <label class="font-medium text-slate-700">Max Links Per Node</label>
+                        <span id="val-maxLinks" class="font-semibold text-emerald-700">5</span>
+                    </div>
+                    <input id="ctrl-maxLinks" type="range" min="2" max="10" step="1" value="5" class="w-full">
+                </div>
+
+                <div>
+                    <div class="flex justify-between mb-1">
+                        <label class="font-medium text-slate-700">Organic Curve Bend</label>
+                        <span id="val-curveBend" class="font-semibold text-emerald-700">14px</span>
+                    </div>
+                    <input id="ctrl-curveBend" type="range" min="0" max="36" step="1" value="14" class="w-full">
+                </div>
+
+                <div>
+                    <div class="flex justify-between mb-1">
+                        <label class="font-medium text-slate-700">Strands Per Connection</label>
+                        <span id="val-strandsPerEdge" class="font-semibold text-emerald-700">2</span>
+                    </div>
+                    <input id="ctrl-strandsPerEdge" type="range" min="1" max="3" step="1" value="2" class="w-full">
+                </div>
+            </div>
+
+            <hr class="border-slate-100">
+
+            <!-- Section 4: Motion & Color Palette -->
+            <div class="space-y-3">
+                <div class="text-[11px] font-bold uppercase tracking-wider text-emerald-700 flex items-center gap-1.5">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                    <span>Motion & Palette</span>
+                </div>
+
+                <div>
+                    <div class="flex justify-between mb-1">
+                        <label class="font-medium text-slate-700">Ambient Drift Speed</label>
+                        <span id="val-driftSpeed" class="font-semibold text-emerald-700">0.15</span>
+                    </div>
+                    <input id="ctrl-driftSpeed" type="range" min="0" max="0.8" step="0.02" value="0.15" class="w-full">
+                </div>
+
+                <div>
+                    <div class="flex justify-between mb-1">
+                        <label class="font-medium text-slate-700">Pulse Speed</label>
+                        <span id="val-pulseSpeed" class="font-semibold text-emerald-700">2.0</span>
+                    </div>
+                    <input id="ctrl-pulseSpeed" type="range" min="0.4" max="6.0" step="0.2" value="2.0" class="w-full">
+                </div>
+
+                <div class="grid grid-cols-3 gap-2 pt-1">
+                    <div class="flex flex-col items-center p-2 rounded-lg bg-slate-50 border border-slate-200/70">
+                        <input id="ctrl-color0" type="color" value="#10B981" class="w-7 h-7 rounded cursor-pointer border-0 bg-transparent">
+                        <span class="text-[10px] font-medium text-slate-600 mt-1">Emerald</span>
+                    </div>
+                    <div class="flex flex-col items-center p-2 rounded-lg bg-slate-50 border border-slate-200/70">
+                        <input id="ctrl-color1" type="color" value="#26D677" class="w-7 h-7 rounded cursor-pointer border-0 bg-transparent">
+                        <span class="text-[10px] font-medium text-slate-600 mt-1">Mint</span>
+                    </div>
+                    <div class="flex flex-col items-center p-2 rounded-lg bg-slate-50 border border-slate-200/70">
+                        <input id="ctrl-color2" type="color" value="#84D71B" class="w-7 h-7 rounded cursor-pointer border-0 bg-transparent">
+                        <span class="text-[10px] font-medium text-slate-600 mt-1">Lime</span>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between pt-1">
+                    <label class="font-medium text-slate-700">Background Color</label>
+                    <input id="ctrl-bgColor" type="color" value="#ffffff" class="w-7 h-7 rounded cursor-pointer border border-slate-200">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Copy Embed Code Modal -->
+    <div id="code-modal" class="fixed inset-0 z-40 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4 opacity-0 pointer-events-none transition-opacity duration-200">
+        <div class="bg-white border border-slate-200 rounded-2xl shadow-2xl max-w-2xl w-full overflow-hidden flex flex-col max-h-[85vh]">
+            <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+                <div>
+                    <h3 class="text-sm font-bold text-slate-800">Standalone Website Background Code</h3>
+                    <p class="text-xs text-slate-500">Includes all your current custom settings. Paste anywhere in your HTML page.</p>
+                </div>
+                <button id="close-code-btn" class="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="p-4 bg-slate-950 overflow-y-auto flex-1">
+                <pre id="embed-code-output" class="text-[11px] leading-relaxed text-emerald-300 font-mono whitespace-pre-wrap break-all select-all"></pre>
+            </div>
+
+            <div class="px-5 py-3.5 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
+                <span id="copy-status" class="text-xs font-medium text-emerald-600 opacity-0 transition-opacity">Copied to clipboard!</span>
+                <div class="flex items-center gap-2">
+                    <button id="close-code-footer-btn" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-200/70 transition-colors">
+                        Close
+                    </button>
+                    <button id="copy-code-action-btn" class="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold shadow-md shadow-emerald-600/20 transition-all">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/>
+                        </svg>
+                        <span>Copy Code</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            const canvas = document.getElementById('neural-canvas');
+            const ctx = canvas.getContext('2d');
+
+            function hexToRgb(hex) {
+                const clean = hex.replace('#', '');
+                const num = parseInt(clean, 16);
+                return {
+                    hex: '#' + clean.toUpperCase(),
+                    r: (num >> 16) & 255,
+                    g: (num >> 8) & 255,
+                    b: num & 255
+                };
+            }
+
+            // Dominant Emerald & Mint Green Palette (Blue tint completely removed)
+            // Primary: #10B981 (Emerald Green) & #26D677 (Mint Green) (~80% combined), Accent: #84D71B (Lime Green) (~20%)
+            const DEFAULT_COLORS = ['#10B981', '#26D677', '#84D71B'];
+            let PALETTE = DEFAULT_COLORS.map(hexToRgb);
+
+            const DEFAULT_CONFIG = {
+                baseOpacity: 0.70,       // 70% opacity in non-hovered areas
+                hoverOpacity: 0.06,      // 6% opacity inside the hovered area
+                hoverRadius: 340,        // Smooth spotlight radius for hover fade & repulsion
+                repelStrength: 10.0,     // Nodes gently move away from cursor while hovering
+                nodeSizeScale: 0.62,     // Smaller, refined dot sizes at connected node intersections
+                cellSize: 96,            // Grid cell size controlling overall pattern density
+                nodesPerCell: 6,         // Average nodes per micro-cluster
+                edgeWidth: 0.70,         // Thickness of interconnected filaments
+                connectionReach: 1.28,   // Reach multiplier for connecting nearby nodes
+                maxLinks: 5,             // Maximum links per standard node
+                curveBend: 14,           // Organic Bezier filament curvature
+                strandsPerEdge: 2,       // Multi-strand fibrous filaments
+                pulseSpeed: 2.0,         // Subtle breathing pulse speed
+                driftSpeed: 0.15,        // Gentle ambient drift speed
+                showGlow: true,          // Soft emerald halo on transition nodes
+                bgColor: '#ffffff'
+            };
+
+            const CONFIG = { ...DEFAULT_CONFIG };
+
+            let width = window.innerWidth;
+            let height = window.innerHeight;
+            let dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+
+            const pointer = {
+                x: -9999,
+                y: -9999,
+                targetX: -9999,
+                targetY: -9999,
+                isActive: false,
+                globalPresence: 0
+            };
+
+            let nodes = [];
+            let edges = [];
+            let nodeSprites = [];
+            let ambientGlowSprite = null;
+            let restingEdgeRgb = '30, 200, 122';
+
+            function updateRestingEdgeColor() {
+                const r = ((PALETTE[0].r * 0.45 + PALETTE[1].r * 0.45 + PALETTE[2].r * 0.10) | 0);
+                const g = ((PALETTE[0].g * 0.45 + PALETTE[1].g * 0.45 + PALETTE[2].g * 0.10) | 0);
+                const b = ((PALETTE[0].b * 0.45 + PALETTE[1].b * 0.45 + PALETTE[2].b * 0.10) | 0);
+                restingEdgeRgb = `${r}, ${g}, ${b}`;
+            }
+
+            /**
+             * Pre-renders crisp node cores and emerald/mint radial glow halos into offscreen canvases.
+             */
+            function buildSprites() {
+                updateRestingEdgeColor();
+
+                nodeSprites = PALETTE.map((c, idx) => {
+                    const alt = PALETTE[idx === 0 ? 1 : (idx === 1 ? 0 : 1)];
+
+                    // 1. Pre-rendered Soft Emerald/Mint Diffused Halo Sprite (128x128)
+                    const glowSize = 128;
+                    const glowCanvas = document.createElement('canvas');
+                    glowCanvas.width = glowSize;
+                    glowCanvas.height = glowSize;
+                    const gCtx = glowCanvas.getContext('2d');
+                    const halfG = glowSize / 2;
+
+                    const gGrad = gCtx.createRadialGradient(halfG, halfG, 1, halfG, halfG, halfG);
+                    gGrad.addColorStop(0, `rgba(${c.r}, ${c.g}, ${c.b}, 0.52)`);
+                    gGrad.addColorStop(0.32, `rgba(${alt.r}, ${alt.g}, ${alt.b}, 0.22)`);
+                    gGrad.addColorStop(0.68, `rgba(${PALETTE[0].r}, ${PALETTE[0].g}, ${PALETTE[0].b}, 0.06)`);
+                    gGrad.addColorStop(1, `rgba(${PALETTE[0].r}, ${PALETTE[0].g}, ${PALETTE[0].b}, 0)`);
+
+                    gCtx.fillStyle = gGrad;
+                    gCtx.fillRect(0, 0, glowSize, glowSize);
+
+                    // 2. Pre-rendered Crisp Gradient Node Core Sprite (32x32)
+                    const coreSize = 32;
+                    const coreCanvas = document.createElement('canvas');
+                    coreCanvas.width = coreSize;
+                    coreCanvas.height = coreSize;
+                    const cCtx = coreCanvas.getContext('2d');
+                    const halfC = coreSize / 2;
+
+                    const cGrad = cCtx.createRadialGradient(
+                        halfC - coreSize * 0.1,
+                        halfC - coreSize * 0.1,
+                        coreSize * 0.04,
+                        halfC,
+                        halfC,
+                        halfC * 0.85
+                    );
+                    cGrad.addColorStop(0, `rgba(${PALETTE[1].r}, ${PALETTE[1].g}, ${PALETTE[1].b}, 1)`);
+                    cGrad.addColorStop(0.55, `rgba(${c.r}, ${c.g}, ${c.b}, 0.96)`);
+                    cGrad.addColorStop(0.85, `rgba(${alt.r}, ${alt.g}, ${alt.b}, 0.88)`);
+                    cGrad.addColorStop(1, `rgba(${alt.r}, ${alt.g}, ${alt.b}, 0)`);
+
+                    cCtx.fillStyle = cGrad;
+                    cCtx.beginPath();
+                    cCtx.arc(halfC, halfC, halfC * 0.85, 0, Math.PI * 2);
+                    cCtx.fill();
+
+                    return { glowCanvas, coreCanvas };
+                });
+
+                // 3. Pre-rendered Wide Atmospheric Emerald Mist Sprite (256x256)
+                const ambSize = 256;
+                ambientGlowSprite = document.createElement('canvas');
+                ambientGlowSprite.width = ambSize;
+                ambientGlowSprite.height = ambSize;
+                const aCtx = ambientGlowSprite.getContext('2d');
+                const halfA = ambSize / 2;
+
+                const aGrad = aCtx.createRadialGradient(halfA, halfA, 4, halfA, halfA, halfA);
+                aGrad.addColorStop(0, `rgba(${PALETTE[0].r}, ${PALETTE[0].g}, ${PALETTE[0].b}, 0.035)`);
+                aGrad.addColorStop(0.5, `rgba(${PALETTE[1].r}, ${PALETTE[1].g}, ${PALETTE[1].b}, 0.018)`);
+                aGrad.addColorStop(1, `rgba(${PALETTE[1].r}, ${PALETTE[1].g}, ${PALETTE[1].b}, 0)`);
+
+                aCtx.fillStyle = aGrad;
+                aCtx.fillRect(0, 0, ambSize, ambSize);
+            }
+
+            /**
+             * Picks a color index favoring Emerald (#10B981) and Mint (#26D677) as dominant primary (~80%),
+             * with Lime (#84D71B) as secondary highlight (~20%). No blue tint.
+             */
+            function pickWeightedColorIndex() {
+                const rand = Math.random();
+                if (rand < 0.42) return 0; // 42% Emerald Green (#10B981)
+                if (rand < 0.82) return 1; // 40% Mint Green (#26D677)
+                return 2;                  // 18% Lime Green (#84D71B)
+            }
+
+            function createPatternNetwork() {
+                nodes = [];
+                edges = [];
+
+                const cols = Math.max(6, Math.ceil(width / CONFIG.cellSize));
+                const rows = Math.max(5, Math.ceil(height / CONFIG.cellSize));
+                const cellW = width / cols;
+                const cellH = height / rows;
+
+                let idCounter = 0;
+
+                for (let r = 0; r < rows; r++) {
+                    for (let c = 0; c < cols; c++) {
+                        const clusterCenterX = (c + 0.18 + Math.random() * 0.64) * cellW;
+                        const clusterCenterY = (r + 0.18 + Math.random() * 0.64) * cellH;
+
+                        const variance = Math.floor(Math.random() * 3) - 1;
+                        const nodesInCell = Math.max(1, CONFIG.nodesPerCell + variance);
+
+                        for (let k = 0; k < nodesInCell; k++) {
+                            const isHub = (k === 0 && Math.random() < 0.72);
+                            const isBokeh = (!isHub && Math.random() < 0.22);
+
+                            const angle = Math.random() * Math.PI * 2;
+                            const spread = (k === 0)
+                                ? Math.random() * 8
+                                : (8 + Math.random() * Math.min(cellW, cellH) * 0.68);
+
+                            const x = clusterCenterX + Math.cos(angle) * spread;
+                            const y = clusterCenterY + Math.sin(angle) * spread;
+
+                            // Smaller base radii so connected node dots look delicate and refined
+                            const rawRadius = isHub
+                                ? (1.85 + Math.random() * 1.25)
+                                : isBokeh
+                                    ? (1.35 + Math.random() * 1.45)
+                                    : (0.95 + Math.random() * 0.95);
+
+                            const depth = isBokeh
+                                ? (0.42 + Math.random() * 0.28)
+                                : (0.74 + Math.random() * 0.26);
+
+                            const colorIdx = pickWeightedColorIndex();
+                            const altColorIdx = (colorIdx === 0) ? 1 : (colorIdx === 1 ? 0 : 1);
+
+                            nodes.push({
+                                id: idCounter++,
+                                x,
+                                y,
+                                driftX: x,
+                                driftY: y,
+                                originX: x,
+                                originY: y,
+                                offsetX: 0,
+                                offsetY: 0,
+                                vx: (Math.random() - 0.5) * 0.36,
+                                vy: (Math.random() - 0.5) * 0.36,
+                                baseRadius: rawRadius,
+                                depth,
+                                isHub,
+                                isBokeh,
+                                colorIdx,
+                                color: PALETTE[colorIdx],
+                                altColor: PALETTE[altColorIdx],
+                                pulsePhase: Math.random() * Math.PI * 2,
+                                hoverEnergy: 0,
+                                degree: 0
+                            });
+                        }
+                    }
+                }
+
+                // Connect nodes with fibrous Bezier filaments
+                const maxDist = Math.min(cellW, cellH) * CONFIG.connectionReach;
+                const hubDist = maxDist * 1.42;
+
+                for (let i = 0; i < nodes.length; i++) {
+                    const n1 = nodes[i];
+                    const candidates = [];
+
+                    for (let j = i + 1; j < nodes.length; j++) {
+                        const n2 = nodes[j];
+                        const dx = n1.x - n2.x;
+                        const dy = n1.y - n2.y;
+                        if (Math.abs(dx) > hubDist || Math.abs(dy) > hubDist) continue;
+
+                        const dist = Math.hypot(dx, dy);
+                        const limit = (n1.isHub || n2.isHub) ? hubDist : maxDist;
+
+                        if (dist < limit) {
+                            candidates.push({ node: n2, dist, limit });
+                        }
+                    }
+
+                    candidates.sort((a, b) => a.dist - b.dist);
+
+                    const maxLinks = n1.isHub ? Math.round(CONFIG.maxLinks * 1.6) : CONFIG.maxLinks;
+                    let created = 0;
+
+                    for (let k = 0; k < candidates.length && created < maxLinks; k++) {
+                        const { node: n2, dist, limit } = candidates[k];
+                        if (n2.degree >= (n2.isHub ? Math.round(CONFIG.maxLinks * 2) : CONFIG.maxLinks + 1)) continue;
+
+                        const prob = Math.pow(1 - dist / limit, 1.2);
+                        if (Math.random() < prob || created < 2) {
+                            const strands = [];
+                            for (let s = 0; s < CONFIG.strandsPerEdge; s++) {
+                                strands.push({
+                                    unitBend: (Math.random() - 0.5) * 2,
+                                    weight: s === 0 ? 1.0 : (0.48 + Math.random() * 0.35),
+                                    phaseOffset: Math.random() * Math.PI * 2
+                                });
+                            }
+
+                            const midR = (n1.color.r + n2.color.r + PALETTE[0].r) / 3 | 0;
+                            const midG = (n1.color.g + n2.color.g + PALETTE[0].g) / 3 | 0;
+                            const midB = (n1.color.b + n2.color.b + PALETTE[0].b) / 3 | 0;
+
+                            const baseInvDist = 1 / (dist + 0.001);
+                            const baseFade = Math.max(0.2, 1 - dist / (limit * 1.12));
+
+                            edges.push({
+                                a: n1,
+                                b: n2,
+                                maxDist: limit,
+                                maxDistSq: (limit * 1.15) * (limit * 1.15),
+                                baseInvDist,
+                                baseFade,
+                                depthFactor: Math.min(n1.depth, n2.depth),
+                                rgbString: `${midR}, ${midG}, ${midB}`,
+                                strands
+                            });
+
+                            n1.degree++;
+                            n2.degree++;
+                            created++;
+                        }
+                    }
+                }
+            }
+
+            function resizeCanvas() {
+                width = window.innerWidth;
+                height = window.innerHeight;
+                dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+                canvas.width = width * dpr;
+                canvas.height = height * dpr;
+                ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+                if (nodeSprites.length === 0) {
+                    buildSprites();
+                }
+                createPatternNetwork();
+            }
+
+            function render(timestamp) {
+                const time = timestamp * 0.001;
+                ctx.clearRect(0, 0, width, height);
+
+                if (pointer.isActive) {
+                    pointer.x += (pointer.targetX - pointer.x) * 0.09;
+                    pointer.y += (pointer.targetY - pointer.y) * 0.09;
+                    pointer.globalPresence += (1 - pointer.globalPresence) * 0.05;
+                } else {
+                    pointer.globalPresence += (0 - pointer.globalPresence) * 0.035;
+                }
+
+                const hasActiveHover = pointer.globalPresence > 0.004;
+
+                if (hasActiveHover && CONFIG.showGlow && ambientGlowSprite) {
+                    const mistSize = CONFIG.hoverRadius * 2.1;
+                    const mistPulse = 0.88 + 0.12 * Math.sin(time * CONFIG.pulseSpeed);
+                    ctx.globalAlpha = pointer.globalPresence * mistPulse;
+                    ctx.drawImage(
+                        ambientGlowSprite,
+                        pointer.x - mistSize * 0.5,
+                        pointer.y - mistSize * 0.5,
+                        mistSize,
+                        mistSize
+                    );
+                }
+
+                const hoverRadius = CONFIG.hoverRadius;
+                const hoverRadiusSq = hoverRadius * hoverRadius;
+                const invHoverRadius = 1 / hoverRadius;
+                const px = pointer.x;
+                const py = pointer.y;
+
+                // 1. Update node positions & outward cursor repulsion
+                for (let i = 0; i < nodes.length; i++) {
+                    const n = nodes[i];
+
+                    n.driftX += n.vx * CONFIG.driftSpeed * n.depth;
+                    n.driftY += n.vy * CONFIG.driftSpeed * n.depth;
+
+                    n.vx += (n.originX - n.driftX) * 0.0005;
+                    n.vy += (n.originY - n.driftY) * 0.0005;
+                    n.vx *= 0.992;
+                    n.vx *= 0.992;
+
+                    let targetEnergy = 0;
+                    let targetOffsetX = 0;
+                    let targetOffsetY = 0;
+
+                    if (hasActiveHover) {
+                        const dx = n.driftX - px;
+                        if (dx > -hoverRadius && dx < hoverRadius) {
+                            const dy = n.driftY - py;
+                            if (dy > -hoverRadius && dy < hoverRadius) {
+                                const distSq = dx * dx + dy * dy;
+                                if (distSq < hoverRadiusSq) {
+                                    const dist = Math.sqrt(distSq);
+                                    const norm = 1 - dist * invHoverRadius;
+
+                                    // Smooth quintic falloff so center of hover reaches 6% opacity smoothly
+                                    const smoothFalloff = norm * norm * norm * (norm * (norm * 6 - 15) + 10);
+                                    targetEnergy = smoothFalloff * pointer.globalPresence;
+
+                                    // Nodes gently move AWAY from cursor (outward radial repulsion)
+                                    const repelProfile = Math.sin(norm * Math.PI) * 0.85 + smoothFalloff * 0.35;
+                                    const shiftMag = repelProfile * CONFIG.repelStrength * n.depth * pointer.globalPresence;
+                                    const invDist = 1 / (dist + 0.001);
+
+                                    const awayX = dx * invDist;
+                                    const awayY = dy * invDist;
+                                    targetOffsetX = awayX * shiftMag;
+                                    targetOffsetY = awayY * shiftMag;
+                                }
+                            }
+                        }
+                    }
+
+                    if (targetEnergy > 0 || n.hoverEnergy > 0.001 || Math.abs(n.offsetX) > 0.01 || Math.abs(n.offsetY) > 0.01) {
+                        const energySpeed = targetEnergy > n.hoverEnergy ? 0.085 : 0.045;
+                        n.hoverEnergy += (targetEnergy - n.hoverEnergy) * energySpeed;
+                        n.offsetX += (targetOffsetX - n.offsetX) * 0.075;
+                        n.offsetY += (targetOffsetY - n.offsetY) * 0.075;
+                        if (n.hoverEnergy < 0.001 && targetEnergy === 0) {
+                            n.hoverEnergy = 0;
+                            n.offsetX = 0;
+                            n.offsetY = 0;
+                        }
+                        n.x = n.driftX + n.offsetX;
+                        n.y = n.driftY + n.offsetY;
+                    } else {
+                        n.x = n.driftX;
+                        n.y = n.driftY;
+                    }
+                }
+
+                // 2A. Batch-render ALL non-hovered resting edges (at 70% base opacity scale)
+                ctx.lineCap = 'round';
+                ctx.globalAlpha = 1;
+                ctx.beginPath();
+                let hasHoveredEdges = false;
+
+                for (let i = 0; i < edges.length; i++) {
+                    const edge = edges[i];
+                    const n1 = edge.a;
+                    const n2 = edge.b;
+
+                    if (n1.hoverEnergy > 0.008 || n2.hoverEnergy > 0.008) {
+                        hasHoveredEdges = true;
+                        continue;
+                    }
+
+                    const dx = n2.x - n1.x;
+                    const dy = n2.y - n1.y;
+                    if (dx * dx + dy * dy > edge.maxDistSq) continue;
+
+                    const bend = edge.strands[0].unitBend * CONFIG.curveBend * edge.baseInvDist;
+                    const cpX = (n1.x + n2.x) * 0.5 - dy * bend;
+                    const cpY = (n1.y + n2.y) * 0.5 + dx * bend;
+
+                    ctx.moveTo(n1.x, n1.y);
+                    ctx.quadraticCurveTo(cpX, cpY, n2.x, n2.y);
+                }
+
+                ctx.lineWidth = CONFIG.edgeWidth;
+                // Scaled by 0.52 so dense intersecting filaments harmonize with 70% node opacity on white
+                ctx.strokeStyle = `rgba(${restingEdgeRgb}, ${CONFIG.baseOpacity * 0.52})`;
+                ctx.stroke();
+
+                // 2B. Individually render edges inside the active hover zone (fading down to 6% opacity)
+                if (hasHoveredEdges) {
+                    for (let i = 0; i < edges.length; i++) {
+                        const edge = edges[i];
+                        const n1 = edge.a;
+                        const n2 = edge.b;
+                        const edgeHover = n1.hoverEnergy > n2.hoverEnergy ? n1.hoverEnergy : n2.hoverEnergy;
+
+                        if (edgeHover <= 0.008) continue;
+
+                        const dx = n2.x - n1.x;
+                        const dy = n2.y - n1.y;
+                        const distSq = dx * dx + dy * dy;
+                        if (distSq > edge.maxDistSq) continue;
+
+                        const pulseWave = 0.5 + 0.5 * Math.sin(time * CONFIG.pulseSpeed + n1.pulsePhase);
+                        // Interpolate smoothly from baseOpacity (0.70) to hoverOpacity (0.06)
+                        const rawAlpha = CONFIG.baseOpacity + (CONFIG.hoverOpacity - CONFIG.baseOpacity) * edgeHover;
+                        const pulsedAlpha = rawAlpha * (0.88 + 0.12 * pulseWave);
+                        const finalAlpha = Math.max(0.005, pulsedAlpha * edge.baseFade * edge.depthFactor * 0.65);
+
+                        const invDist = edge.baseInvDist;
+                        const nx = -dy * invDist;
+                        const ny = dx * invDist;
+                        const midX = (n1.x + n2.x) * 0.5;
+                        const midY = (n1.y + n2.y) * 0.5;
+
+                        const strandCount = edge.strands.length;
+
+                        for (let s = 0; s < strandCount; s++) {
+                            const strand = edge.strands[s];
+                            const strandAlpha = finalAlpha * strand.weight * (s === 0 ? 1 : 0.55);
+                            if (strandAlpha < 0.005) continue;
+
+                            const baseBend = strand.unitBend * CONFIG.curveBend;
+                            const dynamicBend = baseBend + Math.sin(time * 1.5 + strand.phaseOffset) * (edgeHover * 2.0);
+                            const cpX = midX + nx * dynamicBend;
+                            const cpY = midY + ny * dynamicBend;
+
+                            ctx.beginPath();
+                            ctx.moveTo(n1.x, n1.y);
+                            ctx.quadraticCurveTo(cpX, cpY, n2.x, n2.y);
+                            ctx.strokeStyle = `rgba(${edge.rgbString}, ${strandAlpha})`;
+                            ctx.lineWidth = (s === 0 ? CONFIG.edgeWidth : CONFIG.edgeWidth * 0.55) * edge.depthFactor;
+                            ctx.stroke();
+                        }
+                    }
+                }
+
+                // 3A. Fast batch-render all non-hovered resting nodes by palette color (at 70% opacity)
+                for (let cIdx = 0; cIdx < PALETTE.length; cIdx++) {
+                    const col = PALETTE[cIdx];
+                    ctx.beginPath();
+                    for (let i = 0; i < nodes.length; i++) {
+                        const n = nodes[i];
+                        if (n.colorIdx !== cIdx || n.hoverEnergy > 0.008) continue;
+                        const r = n.baseRadius * CONFIG.nodeSizeScale * (0.78 + n.depth * 0.25);
+                        ctx.moveTo(n.x + r, n.y);
+                        ctx.arc(n.x, n.y, r, 0, Math.PI * 2);
+                    }
+                    ctx.fillStyle = `rgba(${col.r}, ${col.g}, ${col.b}, ${CONFIG.baseOpacity})`;
+                    ctx.fill();
+                }
+
+                // 3B. Render active hovered nodes (fading down to 6% in the center + soft pulse halo)
+                for (let i = 0; i < nodes.length; i++) {
+                    const n = nodes[i];
+                    if (n.hoverEnergy <= 0.008) continue;
+
+                    const sprite = nodeSprites[n.colorIdx];
+                    const pulse = 0.5 + 0.5 * Math.sin(time * CONFIG.pulseSpeed + n.pulsePhase);
+
+                    // Smoothly interpolate from 70% resting opacity down to 6% hover opacity
+                    const baseLerpAlpha = CONFIG.baseOpacity + (CONFIG.hoverOpacity - CONFIG.baseOpacity) * n.hoverEnergy;
+                    const nodeAlpha = Math.max(0.01, baseLerpAlpha * (0.85 + 0.15 * pulse) * n.depth);
+
+                    const currentRadius = n.baseRadius * CONFIG.nodeSizeScale * (1 + n.hoverEnergy * 0.12 * pulse);
+
+                    if (CONFIG.showGlow) {
+                        const glowRadius = currentRadius * (5.5 + pulse * 2.5);
+                        const glowDiameter = glowRadius * 2;
+                        // Subtle emerald/mint pulse glow inside/around the hover area
+                        const haloPeak = Math.max(CONFIG.hoverOpacity * 2.2, 0.14);
+                        ctx.globalAlpha = Math.min(1, n.hoverEnergy * haloPeak * (0.55 + 0.45 * pulse));
+                        ctx.drawImage(
+                            sprite.glowCanvas,
+                            n.x - glowRadius,
+                            n.y - glowRadius,
+                            glowDiameter,
+                            glowDiameter
+                        );
+                    }
+
+                    const coreDiameter = currentRadius * 2.35;
+                    ctx.globalAlpha = Math.min(1, nodeAlpha);
+                    ctx.drawImage(
+                        sprite.coreCanvas,
+                        n.x - coreDiameter * 0.5,
+                        n.y - coreDiameter * 0.5,
+                        coreDiameter,
+                        coreDiameter
+                    );
+                }
+
+                ctx.globalAlpha = 1;
+                requestAnimationFrame(render);
+            }
+
+            function setupInteractions() {
+                window.addEventListener('mousemove', (e) => {
+                    if (!pointer.isActive) {
+                        pointer.x = e.clientX;
+                        pointer.y = e.clientY;
+                    }
+                    pointer.targetX = e.clientX;
+                    pointer.targetY = e.clientY;
+                    pointer.isActive = true;
+                });
+
+                document.addEventListener('mouseleave', () => {
+                    pointer.isActive = false;
+                });
+
+                window.addEventListener('touchstart', (e) => {
+                    if (e.touches.length > 0) {
+                        pointer.x = e.touches[0].clientX;
+                        pointer.y = e.touches[0].clientY;
+                        pointer.targetX = pointer.x;
+                        pointer.targetY = pointer.y;
+                        pointer.isActive = true;
+                    }
+                }, { passive: true });
+
+                window.addEventListener('touchmove', (e) => {
+                    if (e.touches.length > 0) {
+                        pointer.targetX = e.touches[0].clientX;
+                        pointer.targetY = e.touches[0].clientY;
+                        pointer.isActive = true;
+                    }
+                }, { passive: true });
+
+                window.addEventListener('touchend', () => {
+                    pointer.isActive = false;
+                });
+
+                window.addEventListener('resize', resizeCanvas);
+            }
+
+            function generateStandaloneCode() {
+                const paletteJson = JSON.stringify(PALETTE);
+                const configJson = JSON.stringify(CONFIG, null, 4);
+
+                return `<!-- Emerald & Mint Interconnected Nodes Background -->
+<canvas id="neural-canvas" style="position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:-1;pointer-events:none;background:${CONFIG.bgColor};display:block;"></canvas>
+<script>
+(function () {
+    const canvas = document.getElementById('neural-canvas');
+    const ctx = canvas.getContext('2d');
+    const PALETTE = ${paletteJson};
+    const CONFIG = ${configJson};
+
+    let width = window.innerWidth, height = window.innerHeight;
+    let dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+    const pointer = { x: -9999, y: -9999, targetX: -9999, targetY: -9999, isActive: false, globalPresence: 0 };
+    let nodes = [], edges = [], nodeSprites = [], ambientGlowSprite = null;
+    const restingEdgeRgb = ((PALETTE[0].r*0.45+PALETTE[1].r*0.45+PALETTE[2].r*0.1)|0)+','+((PALETTE[0].g*0.45+PALETTE[1].g*0.45+PALETTE[2].g*0.1)|0)+','+((PALETTE[0].b*0.45+PALETTE[1].b*0.45+PALETTE[2].b*0.1)|0);
+
+    function buildSprites() {
+        nodeSprites = PALETTE.map((c, idx) => {
+            const alt = PALETTE[idx === 0 ? 1 : 0];
+            const glowCanvas = document.createElement('canvas');
+            glowCanvas.width = glowCanvas.height = 128;
+            const gCtx = glowCanvas.getContext('2d');
+            const gGrad = gCtx.createRadialGradient(64, 64, 1, 64, 64, 64);
+            gGrad.addColorStop(0, 'rgba('+c.r+','+c.g+','+c.b+',0.52)');
+            gGrad.addColorStop(0.32, 'rgba('+alt.r+','+alt.g+','+alt.b+',0.22)');
+            gGrad.addColorStop(1, 'rgba('+c.r+','+c.g+','+c.b+',0)');
+            gCtx.fillStyle = gGrad; gCtx.fillRect(0, 0, 128, 128);
+
+            const coreCanvas = document.createElement('canvas');
+            coreCanvas.width = coreCanvas.height = 32;
+            const cCtx = coreCanvas.getContext('2d');
+            const cGrad = cCtx.createRadialGradient(13, 13, 1, 16, 16, 13.6);
+            cGrad.addColorStop(0, 'rgba('+PALETTE[1].r+','+PALETTE[1].g+','+PALETTE[1].b+',1)');
+            cGrad.addColorStop(0.55, 'rgba('+c.r+','+c.g+','+c.b+',0.96)');
+            cGrad.addColorStop(1, 'rgba('+alt.r+','+alt.g+','+alt.b+',0)');
+            cCtx.fillStyle = cGrad; cCtx.beginPath(); cCtx.arc(16, 16, 13.6, 0, Math.PI * 2); cCtx.fill();
+            return { glowCanvas, coreCanvas };
+        });
+        ambientGlowSprite = document.createElement('canvas');
+        ambientGlowSprite.width = ambientGlowSprite.height = 256;
+        const aCtx = ambientGlowSprite.getContext('2d');
+        const aGrad = aCtx.createRadialGradient(128, 128, 4, 128, 128, 128);
+        aGrad.addColorStop(0, 'rgba('+PALETTE[0].r+','+PALETTE[0].g+','+PALETTE[0].b+',0.035)');
+        aGrad.addColorStop(1, 'rgba('+PALETTE[1].r+','+PALETTE[1].g+','+PALETTE[1].b+',0)');
+        aCtx.fillStyle = aGrad; aCtx.fillRect(0, 0, 256, 256);
+    }
+
+    function createPatternNetwork() {
+        nodes = []; edges = [];
+        const cols = Math.max(6, Math.ceil(width / CONFIG.cellSize));
+        const rows = Math.max(5, Math.ceil(height / CONFIG.cellSize));
+        const cellW = width / cols, cellH = height / rows;
+        for (let r = 0; r < rows; r++) {
+            for (let c = 0; c < cols; c++) {
+                const cx = (c + 0.18 + Math.random() * 0.64) * cellW;
+                const cy = (r + 0.18 + Math.random() * 0.64) * cellH;
+                const count = Math.max(1, CONFIG.nodesPerCell + Math.floor(Math.random() * 3) - 1);
+                for (let k = 0; k < count; k++) {
+                    const isHub = (k === 0 && Math.random() < 0.72);
+                    const isBokeh = (!isHub && Math.random() < 0.22);
+                    const angle = Math.random() * Math.PI * 2;
+                    const spread = (k === 0) ? Math.random() * 8 : (8 + Math.random() * Math.min(cellW, cellH) * 0.68);
+                    const x = cx + Math.cos(angle) * spread, y = cy + Math.sin(angle) * spread;
+                    const rand = Math.random();
+                    const colorIdx = rand < 0.42 ? 0 : (rand < 0.82 ? 1 : 2);
+                    nodes.push({
+                        x, y, driftX: x, driftY: y, originX: x, originY: y, offsetX: 0, offsetY: 0,
+                        vx: (Math.random() - 0.5) * 0.36, vy: (Math.random() - 0.5) * 0.36,
+                        baseRadius: isHub ? (1.85 + Math.random()*1.25) : isBokeh ? (1.35 + Math.random()*1.45) : (0.95 + Math.random()*0.95),
+                        depth: isBokeh ? (0.42 + Math.random()*0.28) : (0.74 + Math.random()*0.26),
+                        isHub, colorIdx, color: PALETTE[colorIdx], pulsePhase: Math.random() * Math.PI * 2, hoverEnergy: 0, degree: 0
+                    });
+                }
+            }
+        }
+        const maxDist = Math.min(cellW, cellH) * CONFIG.connectionReach, hubDist = maxDist * 1.42;
+        for (let i = 0; i < nodes.length; i++) {
+            const n1 = nodes[i], candidates = [];
+            for (let j = i + 1; j < nodes.length; j++) {
+                const n2 = nodes[j], dx = n1.x - n2.x, dy = n1.y - n2.y;
+                if (Math.abs(dx) > hubDist || Math.abs(dy) > hubDist) continue;
+                const dist = Math.hypot(dx, dy), limit = (n1.isHub || n2.isHub) ? hubDist : maxDist;
+                if (dist < limit) candidates.push({ node: n2, dist, limit });
+            }
+            candidates.sort((a, b) => a.dist - b.dist);
+            const maxLinks = n1.isHub ? Math.round(CONFIG.maxLinks * 1.6) : CONFIG.maxLinks;
+            for (let k = 0, created = 0; k < candidates.length && created < maxLinks; k++) {
+                const { node: n2, dist, limit } = candidates[k];
+                if (n2.degree >= (n2.isHub ? Math.round(CONFIG.maxLinks * 2) : CONFIG.maxLinks + 1)) continue;
+                if (Math.random() < Math.pow(1 - dist / limit, 1.2) || created < 2) {
+                    const strands = [];
+                    for (let s = 0; s < CONFIG.strandsPerEdge; s++) {
+                        strands.push({ unitBend: (Math.random() - 0.5) * 2, weight: s === 0 ? 1 : 0.6, phaseOffset: Math.random() * Math.PI * 2 });
+                    }
+                    edges.push({
+                        a: n1, b: n2, maxDistSq: (limit * 1.15) ** 2, baseInvDist: 1 / (dist + 0.001),
+                        baseFade: Math.max(0.2, 1 - dist / (limit * 1.12)), depthFactor: Math.min(n1.depth, n2.depth),
+                        rgbString: ((n1.color.r+n2.color.r+PALETTE[0].r)/3|0)+','+((n1.color.g+n2.color.g+PALETTE[0].g)/3|0)+','+((n1.color.b+n2.color.b+PALETTE[0].b)/3|0),
+                        strands
+                    });
+                    n1.degree++; n2.degree++; created++;
+                }
+            }
+        }
+    }
+
+    function resize() {
+        width = window.innerWidth; height = window.innerHeight;
+        dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+        canvas.width = width * dpr; canvas.height = height * dpr;
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        if (!nodeSprites.length) buildSprites();
+        createPatternNetwork();
+    }
+
+    function render(ts) {
+        const time = ts * 0.001;
+        ctx.clearRect(0, 0, width, height);
+        if (pointer.isActive) {
+            pointer.x += (pointer.targetX - pointer.x) * 0.09;
+            pointer.y += (pointer.targetY - pointer.y) * 0.09;
+            pointer.globalPresence += (1 - pointer.globalPresence) * 0.05;
+        } else {
+            pointer.globalPresence += (0 - pointer.globalPresence) * 0.035;
+        }
+        const hasHover = pointer.globalPresence > 0.004;
+        const r = CONFIG.hoverRadius, rSq = r * r, invR = 1 / r, px = pointer.x, py = pointer.y;
+
+        for (let i = 0; i < nodes.length; i++) {
+            const n = nodes[i];
+            n.driftX += n.vx * CONFIG.driftSpeed * n.depth;
+            n.driftY += n.vy * CONFIG.driftSpeed * n.depth;
+            n.vx = (n.vx + (n.originX - n.driftX) * 0.0005) * 0.992;
+            n.vy = (n.vy + (n.originY - n.driftY) * 0.0005) * 0.992;
+            let tEnergy = 0, tOx = 0, tOy = 0;
+            if (hasHover) {
+                const dx = n.driftX - px, dy = n.driftY - py;
+                if (dx > -r && dx < r && dy > -r && dy < r) {
+                    const dSq = dx * dx + dy * dy;
+                    if (dSq < rSq) {
+                        const dist = Math.sqrt(dSq), norm = 1 - dist * invR;
+                        const falloff = norm * norm * norm * (norm * (norm * 6 - 15) + 10);
+                        tEnergy = falloff * pointer.globalPresence;
+                        const shift = (Math.sin(norm * Math.PI) * 0.85 + falloff * 0.35) * CONFIG.repelStrength * n.depth * pointer.globalPresence / (dist + 0.001);
+                        tOx = dx * shift; tOy = dy * shift;
+                    }
+                }
+            }
+            if (tEnergy > 0 || n.hoverEnergy > 0.001) {
+                n.hoverEnergy += (tEnergy - n.hoverEnergy) * (tEnergy > n.hoverEnergy ? 0.085 : 0.045);
+                n.offsetX += (tOx - n.offsetX) * 0.075; n.offsetY += (tOy - n.offsetY) * 0.075;
+                if (n.hoverEnergy < 0.001 && tEnergy === 0) { n.hoverEnergy = n.offsetX = n.offsetY = 0; }
+                n.x = n.driftX + n.offsetX; n.y = n.driftY + n.offsetY;
+            } else { n.x = n.driftX; n.y = n.driftY; }
+        }
+
+        ctx.lineCap = 'round'; ctx.globalAlpha = 1; ctx.beginPath();
+        let hasHoveredEdges = false;
+        for (let i = 0; i < edges.length; i++) {
+            const e = edges[i], n1 = e.a, n2 = e.b;
+            if (n1.hoverEnergy > 0.008 || n2.hoverEnergy > 0.008) { hasHoveredEdges = true; continue; }
+            const dx = n2.x - n1.x, dy = n2.y - n1.y;
+            if (dx * dx + dy * dy > e.maxDistSq) continue;
+            const bend = e.strands[0].unitBend * CONFIG.curveBend * e.baseInvDist;
+            ctx.moveTo(n1.x, n1.y);
+            ctx.quadraticCurveTo((n1.x + n2.x) * 0.5 - dy * bend, (n1.y + n2.y) * 0.5 + dx * bend, n2.x, n2.y);
+        }
+        ctx.lineWidth = CONFIG.edgeWidth;
+        ctx.strokeStyle = 'rgba(' + restingEdgeRgb + ',' + (CONFIG.baseOpacity * 0.52) + ')';
+        ctx.stroke();
+
+        if (hasHoveredEdges) {
+            for (let i = 0; i < edges.length; i++) {
+                const e = edges[i], n1 = e.a, n2 = e.b;
+                const eh = Math.max(n1.hoverEnergy, n2.hoverEnergy);
+                if (eh <= 0.008) continue;
+                const dx = n2.x - n1.x, dy = n2.y - n1.y;
+                if (dx * dx + dy * dy > e.maxDistSq) continue;
+                const rawA = CONFIG.baseOpacity + (CONFIG.hoverOpacity - CONFIG.baseOpacity) * eh;
+                const finalA = Math.max(0.005, rawA * e.baseFade * e.depthFactor * 0.65);
+                const nx = -dy * e.baseInvDist, ny = dx * e.baseInvDist, mx = (n1.x + n2.x) * 0.5, my = (n1.y + n2.y) * 0.5;
+                for (let s = 0; s < e.strands.length; s++) {
+                    const st = e.strands[s], sa = finalA * st.weight * (s === 0 ? 1 : 0.55);
+                    if (sa < 0.005) continue;
+                    const bend = st.unitBend * CONFIG.curveBend + Math.sin(time * 1.5 + st.phaseOffset) * (eh * 2);
+                    ctx.beginPath(); ctx.moveTo(n1.x, n1.y);
+                    ctx.quadraticCurveTo(mx + nx * bend, my + ny * bend, n2.x, n2.y);
+                    ctx.strokeStyle = 'rgba(' + e.rgbString + ',' + sa + ')';
+                    ctx.lineWidth = (s === 0 ? CONFIG.edgeWidth : CONFIG.edgeWidth * 0.55) * e.depthFactor;
+                    ctx.stroke();
+                }
+            }
+        }
+
+        for (let cIdx = 0; cIdx < PALETTE.length; cIdx++) {
+            const col = PALETTE[cIdx]; ctx.beginPath();
+            for (let i = 0; i < nodes.length; i++) {
+                const n = nodes[i];
+                if (n.colorIdx !== cIdx || n.hoverEnergy > 0.008) continue;
+                const rad = n.baseRadius * CONFIG.nodeSizeScale * (0.78 + n.depth * 0.25);
+                ctx.moveTo(n.x + rad, n.y); ctx.arc(n.x, n.y, rad, 0, Math.PI * 2);
+            }
+            ctx.fillStyle = 'rgba(' + col.r + ',' + col.g + ',' + col.b + ',' + CONFIG.baseOpacity + ')';
+            ctx.fill();
+        }
+
+        for (let i = 0; i < nodes.length; i++) {
+            const n = nodes[i];
+            if (n.hoverEnergy <= 0.008) continue;
+            const sp = nodeSprites[n.colorIdx];
+            const pulse = 0.5 + 0.5 * Math.sin(time * CONFIG.pulseSpeed + n.pulsePhase);
+            const lerpA = CONFIG.baseOpacity + (CONFIG.hoverOpacity - CONFIG.baseOpacity) * n.hoverEnergy;
+            const rad = n.baseRadius * CONFIG.nodeSizeScale * (1 + n.hoverEnergy * 0.12 * pulse);
+            if (CONFIG.showGlow) {
+                const gr = rad * (5.5 + pulse * 2.5);
+                ctx.globalAlpha = Math.min(1, n.hoverEnergy * Math.max(CONFIG.hoverOpacity * 2.2, 0.14) * (0.55 + 0.45 * pulse));
+                ctx.drawImage(sp.glowCanvas, n.x - gr, n.y - gr, gr * 2, gr * 2);
+            }
+            const cd = rad * 2.35;
+            ctx.globalAlpha = Math.min(1, Math.max(0.01, lerpA * (0.85 + 0.15 * pulse) * n.depth));
+            ctx.drawImage(sp.coreCanvas, n.x - cd * 0.5, n.y - cd * 0.5, cd, cd);
+        }
+        ctx.globalAlpha = 1;
+        requestAnimationFrame(render);
+    }
+
+    window.addEventListener('mousemove', e => {
+        if (!pointer.isActive) { pointer.x = e.clientX; pointer.y = e.clientY; }
+        pointer.targetX = e.clientX; pointer.targetY = e.clientY; pointer.isActive = true;
+    });
+    document.addEventListener('mouseleave', () => pointer.isActive = false);
+    window.addEventListener('resize', resize);
+    resize();
+    requestAnimationFrame(render);
+})();
+<\/script>`;
+            }
+
+            function setupUIControls() {
+                const tunePanel = document.getElementById('tune-panel');
+                const toggleTuneBtn = document.getElementById('toggle-tune-btn');
+                const closeTuneBtn = document.getElementById('close-tune-btn');
+                const resetBtn = document.getElementById('reset-defaults-btn');
+
+                const codeModal = document.getElementById('code-modal');
+                const openCodeBtn = document.getElementById('open-code-btn');
+                const closeCodeBtn = document.getElementById('close-code-btn');
+                const closeCodeFooterBtn = document.getElementById('close-code-footer-btn');
+                const copyActionBtn = document.getElementById('copy-code-action-btn');
+                const codeOutput = document.getElementById('embed-code-output');
+                const copyStatus = document.getElementById('copy-status');
+
+                let isTuneOpen = false;
+                function setTuneOpen(open) {
+                    isTuneOpen = open;
+                    if (open) {
+                        tunePanel.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-2');
+                        tunePanel.classList.add('opacity-100', 'pointer-events-auto', 'translate-y-0');
+                    } else {
+                        tunePanel.classList.add('opacity-0', 'pointer-events-none', 'translate-y-2');
+                        tunePanel.classList.remove('opacity-100', 'pointer-events-auto', 'translate-y-0');
+                    }
+                }
+
+                toggleTuneBtn.addEventListener('click', () => setTuneOpen(!isTuneOpen));
+                closeTuneBtn.addEventListener('click', () => setTuneOpen(false));
+
+                function openModal() {
+                    codeOutput.textContent = generateStandaloneCode();
+                    codeModal.classList.remove('opacity-0', 'pointer-events-none');
+                    codeModal.classList.add('opacity-100', 'pointer-events-auto');
+                }
+                function closeModal() {
+                    codeModal.classList.add('opacity-0', 'pointer-events-none');
+                    codeModal.classList.remove('opacity-100', 'pointer-events-auto');
+                }
+
+                openCodeBtn.addEventListener('click', openModal);
+                closeCodeBtn.addEventListener('click', closeModal);
+                closeCodeFooterBtn.addEventListener('click', closeModal);
+                codeModal.addEventListener('click', (e) => {
+                    if (e.target === codeModal) closeModal();
+                });
+
+                copyActionBtn.addEventListener('click', () => {
+                    const textarea = document.createElement('textarea');
+                    textarea.value = codeOutput.textContent;
+                    textarea.style.position = 'fixed';
+                    textarea.style.opacity = '0';
+                    document.body.appendChild(textarea);
+                    textarea.select();
+                    try {
+                        document.execCommand('copy');
+                        copyStatus.classList.remove('opacity-0');
+                        setTimeout(() => copyStatus.classList.add('opacity-0'), 2200);
+                    } catch (err) {
+                        console.error('Copy failed', err);
+                    }
+                    document.body.removeChild(textarea);
+                });
+
+                // Helper to bind sliders
+                function bindSlider(key, formatFn, rebuildNetwork = false) {
+                    const input = document.getElementById('ctrl-' + key);
+                    const label = document.getElementById('val-' + key);
+                    if (!input || !label) return;
+
+                    input.addEventListener('input', (e) => {
+                        const val = parseFloat(e.target.value);
+                        CONFIG[key] = val;
+                        label.textContent = formatFn(val);
+                        if (rebuildNetwork) {
+                            createPatternNetwork();
+                        }
+                    });
+                }
+
+                bindSlider('baseOpacity', v => Math.round(v * 100) + '%');
+                bindSlider('hoverOpacity', v => Math.round(v * 100) + '%');
+                bindSlider('hoverRadius', v => Math.round(v) + 'px');
+                bindSlider('repelStrength', v => Math.round(v) + 'px');
+                bindSlider('nodeSizeScale', v => v.toFixed(2) + 'x');
+                bindSlider('cellSize', v => Math.round(v) + 'px', true);
+                bindSlider('nodesPerCell', v => Math.round(v), true);
+                bindSlider('edgeWidth', v => v.toFixed(2) + 'px');
+                bindSlider('connectionReach', v => v.toFixed(2) + 'x', true);
+                bindSlider('maxLinks', v => Math.round(v), true);
+                bindSlider('curveBend', v => Math.round(v) + 'px');
+                bindSlider('strandsPerEdge', v => Math.round(v), true);
+                bindSlider('driftSpeed', v => v.toFixed(2));
+                bindSlider('pulseSpeed', v => v.toFixed(1));
+
+                const showGlowCtrl = document.getElementById('ctrl-showGlow');
+                showGlowCtrl.addEventListener('change', (e) => {
+                    CONFIG.showGlow = e.target.checked;
+                });
+
+                // Color Pickers
+                [0, 1, 2].forEach((idx) => {
+                    const picker = document.getElementById('ctrl-color' + idx);
+                    picker.addEventListener('input', (e) => {
+                        PALETTE[idx] = hexToRgb(e.target.value);
+                        buildSprites();
+                        // Update existing nodes & edges with new palette colors
+                        for (let i = 0; i < nodes.length; i++) {
+                            const n = nodes[i];
+                            n.color = PALETTE[n.colorIdx];
+                        }
+                        for (let i = 0; i < edges.length; i++) {
+                            const ed = edges[i];
+                            const midR = (ed.a.color.r + ed.b.color.r + PALETTE[0].r) / 3 | 0;
+                            const midG = (ed.a.color.g + ed.b.color.g + PALETTE[0].g) / 3 | 0;
+                            const midB = (ed.a.color.b + ed.b.color.b + PALETTE[0].b) / 3 | 0;
+                            ed.rgbString = `${midR}, ${midG}, ${midB}`;
+                        }
+                    });
+                });
+
+                const bgPicker = document.getElementById('ctrl-bgColor');
+                bgPicker.addEventListener('input', (e) => {
+                    CONFIG.bgColor = e.target.value;
+                    document.body.style.backgroundColor = CONFIG.bgColor;
+                    document.documentElement.style.backgroundColor = CONFIG.bgColor;
+                });
+
+                // Reset all settings to defaults
+                resetBtn.addEventListener('click', () => {
+                    Object.assign(CONFIG, DEFAULT_CONFIG);
+                    PALETTE = DEFAULT_COLORS.map(hexToRgb);
+
+                    document.body.style.backgroundColor = CONFIG.bgColor;
+                    document.documentElement.style.backgroundColor = CONFIG.bgColor;
+
+                    // Sync inputs and labels
+                    const syncSlider = (key, formatFn) => {
+                        const input = document.getElementById('ctrl-' + key);
+                        const label = document.getElementById('val-' + key);
+                        if (input && label) {
+                            input.value = CONFIG[key];
+                            label.textContent = formatFn(CONFIG[key]);
+                        }
+                    };
+
+                    syncSlider('baseOpacity', v => Math.round(v * 100) + '%');
+                    syncSlider('hoverOpacity', v => Math.round(v * 100) + '%');
+                    syncSlider('hoverRadius', v => Math.round(v) + 'px');
+                    syncSlider('repelStrength', v => Math.round(v) + 'px');
+                    syncSlider('nodeSizeScale', v => v.toFixed(2) + 'x');
+                    syncSlider('cellSize', v => Math.round(v) + 'px');
+                    syncSlider('nodesPerCell', v => Math.round(v));
+                    syncSlider('edgeWidth', v => v.toFixed(2) + 'px');
+                    syncSlider('connectionReach', v => v.toFixed(2) + 'x');
+                    syncSlider('maxLinks', v => Math.round(v));
+                    syncSlider('curveBend', v => Math.round(v) + 'px');
+                    syncSlider('strandsPerEdge', v => Math.round(v));
+                    syncSlider('driftSpeed', v => v.toFixed(2));
+                    syncSlider('pulseSpeed', v => v.toFixed(1));
+
+                    showGlowCtrl.checked = CONFIG.showGlow;
+                    DEFAULT_COLORS.forEach((hex, idx) => {
+                        document.getElementById('ctrl-color' + idx).value = hex;
+                    });
+                    bgPicker.value = CONFIG.bgColor;
+
+                    buildSprites();
+                    createPatternNetwork();
+                });
+            }
+
+            window.onload = function () {
+                resizeCanvas();
+                setupInteractions();
+                setupUIControls();
+                requestAnimationFrame(render);
+            };
+        })();
+    </script>
+</body>
+</html>
