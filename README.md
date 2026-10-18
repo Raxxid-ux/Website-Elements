@@ -3,7 +3,7 @@ Open your HTML file on GitHub. Click Raw near the top-right of the file viewer. 
 
 # Website Elements
 
-A public collection of web-based experiments, reusable interface elements, CSS effects, and animations.
+A collection of web-based experiments, reusable interface elements, CSS effects, and animations.
 
 This repository is a place to share small creative explorations made with HTML, CSS, JavaScript, and other web technologies. Each experiment may be a standalone component, interaction, visual effect, or animation.
 
