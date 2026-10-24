@@ -1,72 +1,74 @@
-# How to preview? 
-Open your HTML file on GitHub. Click Raw near the top-right of the file viewer. Copy the URL from your browser's address bar. Open HTMLPreview and use its preview functionality with your file's raw URL.
+# Web Toolkit
 
-https://htmlpreview.github.io/?
+A growing collection of practical browser-based tools, reusable website components, and small web experiments. The goal is to make everyday digital tasks easier with lightweight, accessible tools built with web technologies.
 
-# Website Elements
+> **Repository rename:** This README uses the new project name, **Web Toolkit**. The GitHub repository URL may still contain `Website-Elements` until the repository itself is renamed in GitHub settings.
 
-A collection of web-based experiments, reusable interface elements, CSS effects, and animations.
+## What's inside
 
-This repository is a place to share small creative explorations made with HTML, CSS, JavaScript, and other web technologies. Each experiment may be a standalone component, interaction, visual effect, or animation.
+- **HTML Tools:** standalone utilities that run in the browser, including metadata inspection/removal and text cleaning.
+- **Website Components:** reusable interface patterns such as buttons, cards, navigation, forms, and menus.
+- **CSS & Visual Experiments:** animations, gradients, transitions, and visual effects.
+- **Future Utilities:** room for formatters, converters, generators, and other small productivity tools.
 
-## What you'll find here
+## Tools
 
-- **CSS animations and effects**: transitions, hover states, loaders, gradients, and motion experiments.
-- **UI components**: buttons, cards, navigation, menus, tooltips, and other interface elements.
-- **Interaction experiments**: micro-interactions, scroll effects, cursor interactions, and responsive behaviors.
-- **Visual experiments**: creative layouts, backgrounds, typography, and generative effects.
-- **Web prototypes**: small ideas built to test a visual or interaction concept.
+| Tool | Description | Location |
+|---|---|---|
+| **Advanced Text Cleaner Pro** | Clean and normalize pasted text using configurable cleanup options before copying the result. | [Open tool](./Tools/Advanced-Text-Cleaner-Pro/index.html) |
+| **PureMeta Metadata Remover** | Inspect image metadata, review GPS and EXIF details, and export cleaned images. Processing is designed to happen in the browser. | [Open tool](./Tools/PureMeta/index.html) |
+
+Tool features and supported file formats may vary by tool. Check each tool's page for its current capabilities and limitations.
 
 ## Project structure
 
-Projects can live in their own folders to keep each experiment self-contained.
-
 ```text
-Website-Elements/
+Web-Toolkit/
 ├── README.md
-├── css-animations/
-│   └── example-animation/
-│       ├── index.html
-│       ├── style.css
-│       └── script.js
-├── ui-components/
-│   └── example-component/
-│       ├── index.html
-│       ├── style.css
-│       └── script.js
-└── visual-experiments/
-    └── example-experiment/
-        ├── index.html
-        ├── style.css
-        └── script.js
+├── Tools/
+│   ├── Advanced-Text-Cleaner-Pro/
+│   │   └── index.html
+│   └── PureMeta/
+│       └── index.html
+├── Website-Components/
+│   └── component-name/
+├── CSS-Experiments/
+│   └── experiment-name/
+└── Visual-Experiments/
+    └── experiment-name/
 ```
 
-These are example folders, not requirements. Add, rename, or reorganize folders as the collection grows. Small experiments can also be uploaded directly when a separate folder is unnecessary.
+This is a suggested structure, not a strict rule. Keep each substantial tool or experiment in its own folder with descriptive filenames and any assets it needs.
 
-## Adding a new experiment
+## Running a tool locally
 
-1. Create a folder with a clear, descriptive name.
-2. Add the files needed to run it, such as `index.html`, `style.css`, `script.js`, images, or other assets.
-3. Include a short project-specific README when the experiment needs setup instructions or extra context.
-4. Add a screenshot or GIF when it helps people understand the result.
-5. Commit or upload the files to this repository.
+1. Open the tool's `index.html` file in a modern browser.
+2. If the tool relies on third-party libraries loaded from a CDN, an internet connection may be required.
+3. Use the controls provided by the tool, and review its privacy notes before processing sensitive content.
 
-For a simple HTML/CSS animation, keeping the HTML, CSS, and JavaScript together in one project folder is usually easiest to understand and reuse.
+These are static browser tools, so a build step or package installation is generally not required unless a project-specific README says otherwise.
 
-## Showcasing an experiment
+## Adding a new tool or component
 
-When possible, include:
+1. Create a descriptive folder under `Tools/`, `Website-Components/`, or the most relevant category.
+2. Include an `index.html` entry point and keep related CSS, JavaScript, and assets together.
+3. Add a short README when setup, dependencies, limitations, or usage need explanation.
+4. Test the tool on desktop and mobile, and check keyboard accessibility.
+5. Add a row to the **Tools** table above when publishing a new tool.
 
-- **Name**: what the experiment is called.
-- **Description**: what it does and what inspired it.
-- **Tech stack**: HTML, CSS, JavaScript, libraries, or tools used.
-- **Preview**: a screenshot, GIF, or live demo link.
-- **Notes**: any instructions, dependencies, or browser limitations.
+## Quality guidelines
 
-## Public sharing
+- Prefer simple, readable HTML, CSS, and JavaScript.
+- Make layouts responsive and controls keyboard accessible.
+- Explain what each tool does and what it does not do.
+- Do not claim that data stays local unless the implementation has been checked to confirm it.
+- Never include passwords, API keys, private data, or assets without permission.
+- Pin or document important third-party dependencies where practical.
 
-This repository is public, so anyone can browse the code. Reuse is subject to the license and any third-party assets or dependencies used by each project. Do not upload passwords, API keys, private information, or assets you don't have permission to share.
+## Previewing HTML on GitHub
+
+GitHub displays HTML source rather than running it as a webpage. For a quick preview, you can use [HTMLPreview](https://htmlpreview.github.io/) with a raw GitHub file URL. For a more reliable public demo, consider publishing static files with GitHub Pages.
 
 ## License
 
-A license has not been selected for this repository yet. Add a `LICENSE` file when you decide how others may use your work.
+Check the repository's `LICENSE` file before reusing code. If no license is present, do not assume that public visibility grants permission to reuse or redistribute the contents.
